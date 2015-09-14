@@ -106,7 +106,7 @@ cdef class Group:
         self._delta = 0
         self._activation = activation
         self._history_index = 0
-        self._history = np.zeros((10000, len(self._units)))
+        self._history = np.zeros((1000000, len(self._units)))
 
     property history:
         """ Activity history (firing rate) """
@@ -136,16 +136,22 @@ cdef class Group:
         """ Firing rate """
         def __get__(self):
             return np.asarray(self._units)["V"]
+        def __set__(self, value):
+            np.asarray(self._units)["V"] = value
 
     property U:
         """ Membrane potential """
         def __get__(self):
             return np.asarray(self._units)["U"]
+        def __set__(self, value):
+            np.asarray(self._units)["U"] = value
 
     property Isyn:
         """ Input current from external synapses """
         def __get__(self):
             return np.asarray(self._units)["Isyn"]
+        def __set__(self, value):
+            np.asarray(self._units)["Isyn"] = value
 
     property Iext:
         """ Input current from external sources """
@@ -253,6 +259,28 @@ cdef class Structure:
         self._pfcth1.reset()
         self._pfcth2.reset()
 
+# ---------------------------------------------------- AssociativeStructure ---
+cdef class AssociativeStructure(Structure):
+    cdef public Group _ass
+
+    def __init__(self, tau=0.01, rest=0, noise=0, activation=Identity()):
+        Structure.__init__(self, tau, rest, noise, activation)
+        self._ass = Group(np.zeros(16,dtype=dtype), tau=tau, rest=rest,
+                          noise=noise, activation=activation)
+
+    def evaluate(self, double dt):
+        Structure.evaluate(self, dt)
+        self._ass.evaluate(dt)
+
+    def reset(self):
+        Structure.reset(self)
+        self._ass.reset()
+
+    property ass:
+        """ The associative group """
+        def __get__(self):
+            return self._ass
+
 # --------------------------------------------------------------- ArmStructure ---
 cdef class ArmStructure:
     cdef Group _theta1
@@ -283,28 +311,6 @@ cdef class ArmStructure:
         self._theta2.reset()
 
 
-
-# ---------------------------------------------------- AssociativeStructure ---
-cdef class AssociativeStructure(Structure):
-    cdef public Group _ass
-
-    def __init__(self, tau=0.01, rest=0, noise=0, activation=Identity()):
-        Structure.__init__(self, tau, rest, noise, activation)
-        self._ass = Group(np.zeros(16,dtype=dtype), tau=tau, rest=rest,
-                          noise=noise, activation=activation)
-
-    def evaluate(self, double dt):
-        Structure.evaluate(self, dt)
-        self._ass.evaluate(dt)
-
-    def reset(self):
-        Structure.reset(self)
-        self._ass.reset()
-
-    property ass:
-        """ The associative group """
-        def __get__(self):
-            return self._ass
 
 
 # ------------------------------------------------------------- Connections ---
@@ -435,20 +441,6 @@ cdef class AllToAll(Connection):
                 v += self._source[j] * self._weights[i*t_size+j]
             self._target[i] += v * self._gain
 
-# --- PPCToPFC ---
-cdef class PPCToPFC(Connection):
-    def propagate(self):
-        cdef int i,j
-        cdef int s_size = self._source.shape[0]
-        cdef int t_size = self._target.shape[0]
-        if not self._active: return
-
-        for i in range(t_size):
-            v = 0
-            for j in range(s_size):
-                v += self._source[j] * self._weights[i*t_size+j]
-            self._target[i] += v * self._gain
-
 
 # --- AssToMot ---
 cdef class AssToMot(Connection):
@@ -551,7 +543,8 @@ cdef class ARMtoSMA(Connection):
 # --- SMAtoARM ---
 cdef class SMAtoARM(Connection):
     def propagate(self):
-        cdef int i,j
+        cdef int i,j,k
+        cdef double v
         if not self._active: return
 
         for k in range(self._narm):
@@ -560,5 +553,58 @@ cdef class SMAtoARM(Connection):
             for i in range(self._narm):
                 for j in range(self._npfc):
                    v += self._source[i*self._npfc+j] * self._weights[k*self._narm*self._npfc+i*self._npfc+j]
+
+            self._target[k] += v * self._gain
+
+# --- PPCtoPFC ---
+cdef class PPCtoPFC(Connection):
+    def propagate(self):
+        cdef int i,j,k
+        cdef double v
+        if not self._active: return
+
+        for k in range(self._npfc):
+            v = 0
+
+            for i in range(self._narm):
+                for j in range(self._n):
+                   v += self._source[i*self._n+j] * self._weights[k*self._narm*self._n+i*self._n+j]
+
+            self._target[k] += v * self._gain
+
+# --- PPCtoSTR ---
+cdef class PPCtoSTR(Connection):
+    def propagate(self):
+        cdef int i,k
+        if not self._active: return
+
+        for k in range(self._npfc):
+            for i in range(self._narm*self._n):
+                self._target[k*self._narm*self._n + i] += self._source[i] * self._weights[k*self._narm*self._n +i] * self._gain
+
+
+# --- PFCtoSTR ---
+cdef class PFCtoSTR(Connection):
+    def propagate(self):
+        cdef int i,k
+        if not self._active: return
+
+        for k in range(self._npfc):
+            for i in range(self._narm*self._n):
+                   self._target[k*self._narm*self._n + i] += self._source[k] * self._weights[k*self._narm*self._n + i] * self._gain
+
+
+# --- STRpfcToBG ---
+cdef class STRpfcToBG(Connection):
+    def propagate(self):
+        cdef int i,j,k
+        cdef double v
+        if not self._active: return
+
+        for k in range(self._npfc):
+            v = 0
+
+            for i in range(self._narm*self._n):
+                   v += self._source[k*self._narm*self._n+i] * self._weights[k*self._narm*self._n+i]
 
             self._target[k] += v * self._gain
