@@ -43,21 +43,34 @@ class Task(object):
             self.index = index
             return self.trials[index]
 
-    def build(self, n):
+    def build(self, n, npfc=17, nppc=36):
         self.trials = np.zeros(n, [("mot", float, 4),
                                    ("cog", float, 4),
                                    ("ass", float, (4, 4)),
                                    ("rwd", float, 4)])
         self.records = np.zeros(n, [("action", float, 1),
+                                    ("move", float, 1),
                                     ("shape", float, 1),
                                     ("cog_choice", float, 1),
                                     ("best", float, 1),
                                     ("RTcog", float, 1),
                                     ("RTmot", float, 1),
+                                    ("RTmove", float, 1),
                                     ("CueValues", float, 4),
                                     ("Wstr", float, 4),
                                     ("Wcog", float, 4),
                                     ("Wmot", float, 4),
+                                    ("PFCValues1", float, npfc * nppc),
+                                    ("PPCValues1", float, npfc * nppc),
+                                    ("PFCValues2", float, npfc * nppc),
+                                    ("PPCValues2", float, npfc * nppc),
+                                    ("Wppc_pfc1", float, npfc * nppc),
+                                    ("Wpfc_str1", float, npfc * nppc),
+                                    ("Wppc_str1", float, npfc * nppc),
+                                    ("Wppc_pfc2", float, npfc * nppc),
+                                    ("Wpfc_str2", float, npfc * nppc),
+                                    ("Wppc_str2", float, npfc * nppc),
+                                    ("moves", int, 1),
                                     ("reward", float, 1)])
 
     def process(self, trial, action, RT=0, debug=False):
@@ -70,40 +83,44 @@ class Task(object):
             c1, c2 = c2, c1
             m1, m2 = m2, m1
         r1, r2 = trial["rwd"][c1], trial["rwd"][c2]
+        m = self.records[self.index]["move"]
 
         if debug:
             print "Trial %d" % (self.index + 1)
-        if action == m1:
+            print "  Action                : %d " % action
+        if m == m1:
             reward = np.random.uniform(0, 1) < trial["rwd"][c1]
             self.records[self.index]["shape"] = c1
             best = r1 > r2
             if debug:
+                print "  Move			        : [%d] / %d" % (m1, m2)
                 if best:
-                    print "  Choice			: [%d] / %d  (good)" % (c1, c2)
+                    print "  Choice			    : [%d] / %d  (good)" % (c1, c2)
                 else:
-                    print "  Choice			: [%d] / %d  (bad)" % (c1, c2)
+                    print "  Choice			    : [%d] / %d  (bad)" % (c1, c2)
                 print "  Reward (p=%.2f)		: %d" % (trial["rwd"][c1], reward)
-        elif action == m2:
+        elif m == m2:
             reward = np.random.uniform(0, 1) < trial["rwd"][c2]
             self.records[self.index]["shape"] = c2
             best = r2 > r1
             if debug:
+                print "  Move			        : %d / [%d]" % (m1, m2)
                 if best:
-                    print "  Choice			: %d / [%d] (good)" % (c1, c2)
+                    print "  Choice			    : %d / [%d] (good)" % (c1, c2)
                 else:
-                    print "  Choice			: %d / [%d] (bad)" % (c1, c2)
+                    print "  Choice			    : %d / [%d] (bad)" % (c1, c2)
                 print "  Reward (p=%.2f)		: %d" % (trial["rwd"][c2], reward)
         else:
             reward = 0.0
             best = False
             if debug:
-                print "  Choice			: %d /  %d  (bad)" % (c1, c2)
+                print "  Choice			    : %d /  %d  (bad)" % (c1, c2)
                 print "  No Reward"
 
         # Record action, best action (was it the best action), reward and RT
         self.records[self.index]["action"] = action
         self.records[self.index]["best"] = best
-        self.records[self.index]["RTmot"] = RT
+        self.records[self.index]["RTmove"] = RT
         self.records[self.index]["reward"] = reward
 
         if debug:
@@ -111,7 +128,7 @@ class Task(object):
             print "  Mean performance		: %.1f %%" % np.array(P * 100).mean()
             R = self.records[:self.index + 1]["reward"]
             print "  Mean reward			: %.3f" % np.array(R).mean()
-            rt = self.records[:self.index + 1]["RTmot"]
+            rt = self.records[:self.index + 1]["RTmove"]
             print "  Mean Response time	: %.3f ms" % np.array(rt).mean()
 
         return reward, best
