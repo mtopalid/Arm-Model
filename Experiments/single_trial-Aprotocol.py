@@ -15,35 +15,38 @@ if __name__ == "__main__":
     # Include to the path files from cython folder
     temp = '../cython/'
     import sys
-
     sys.path.append(temp)
     # model file build the structures and initialize the model
     from model import *
     from display import *
     from trial import *
-    from task_1ch import Task_1ch
+    from task_a import Task_A
 
     # 1 if there is presentation of cues else 0
     cues_pres = 1
-    trials = 1
+
     # Define the shapes and the positions that we'll be used to each trial
     # n should be multiple of 6 because there are 6 valuable combinations of shapes and positions
-    task = Task_1ch(n=6)
+    task = Task_A(n=6)
 
+    folder = '../Results/Learn_Positions'
+    f = folder + '/Records.npy'
+    temp = np.load(f)
+    connections["PPC.theta1 -> PFC.theta1"].weights = temp["Wppc_pfc1"][-1]
+    connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights = temp["Wpfc_str1"][-1]
+    connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights = temp["Wppc_str1"][-1]
+    connections["PPC.theta2 -> PFC.theta2"].weights = temp["Wppc_pfc2"][-1]
+    connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wpfc_str2"][-1]
+    connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wppc_str1"][-1]
     # Compute a single trial
-    time = trial(task, cues_pres=cues_pres, ncues=1, debugging=True, wholeFig=True)
-    print "Moves        : ", task.records[0]["moves"]
+    time = trial(task, wholeFig=True, debugging=True)
+    print "  Moves                 : ", task.records[0]["moves"]
 
-    # retrieve the activity history of the structures
+    #retrieve the activity history of the structures
     histor = history()
-    pfc1 = histor["PFC"]["theta1"]
-    pfc2 = histor["PFC"]["theta2"]
-    sma1 = histor["SMA"]["theta1"]
-    sma2 = histor["SMA"]["theta2"]
-    arm1 = histor["ARM"]["theta1"]
-    arm2 = histor["ARM"]["theta2"]
-    ppc1 = histor["PPC"]["theta1"]
-    ppc2 = histor["PPC"]["theta2"]
+    ctx = histor["CTX"]["mot"][:time]
+    arm1 = histor["ARM"]["theta1"][:time]
+    arm2 = histor["ARM"]["theta2"][:time]
 
     plt.figure()
     plt.plot(arm1)
@@ -54,26 +57,7 @@ if __name__ == "__main__":
     plt.title('Arm2')
 
     plt.figure()
-    plt.plot(sma1)
-    plt.title('SMA1')
-    plt.figure()
-    plt.plot(sma2)
-    plt.title('SMA2')
+    plt.plot(ctx)
+    plt.title('CTX')
 
-    plt.figure()
-    plt.plot(pfc1)
-    plt.title('PFC1')
-    plt.figure()
-    plt.plot(pfc2)
-    plt.title('PFC2')
-
-    plt.figure()
-    plt.plot(ppc1)
-    plt.title('PPC1')
-
-    plt.figure()
-    plt.plot(ppc2)
-    plt.title('PPC2')
-    plt.show()
-    # Display cortical activity during the single trial
-    if 0: display_ctx(histor, 3.0)  # , "single-trial.pdf")
+    # plt.show()

@@ -28,8 +28,7 @@ if __name__ == "__main__":
     if not os.path.exists(folder):
         os.makedirs(folder)
     # 1 if there is presentation of cues else 0
-    trials = 960
-    moves = np.zeros(trials)
+    trials = 1200
 
     # Initialize the system
     task = Task_1ch(n=trials)
@@ -41,8 +40,7 @@ if __name__ == "__main__":
         # n should be multiple of 6 because there are 6 valuable combinations of shapes and positions
 
         # Compute a single trial
-        time = trial(task, wholeFig=True, trial_n=i)
+        time = trial(task, ncues=1, wholeFig=True, trial_n=i)
 
-    print moves
     f = folder + '/Records.npy'
     np.save(f,task.records)

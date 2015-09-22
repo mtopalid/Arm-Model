@@ -96,7 +96,7 @@ def Wppc2pfc(n1=n_pfc, n2=n_arm, n3=n):
     return w.reshape(n1 * n2 * n3)
 
 
-np.set_printoptions(threshold='nan')
+# np.set_printoptions(threshold='nan')
 # print Wsma2arm(9,17).reshape((9,9,17))
 # print Wsma2sma(9,17).reshape((9*17,9,17))
 # print Wppc2pfc().reshape((17,9,4))
@@ -273,6 +273,7 @@ def reset_weights():
     connections["CTX.cog -> CTX.ass"].weights = weights(4, 0.00005)
     connections["CTX.mot -> CTX.ass"].weights = weights(4, 0.00005)
     connections["CTX.cog -> STR.cog"].weights = weights(4)
+
     connections["PPC.theta1 -> PFC.theta1"] = 0.5 * Wppc2pfc()
     connections["PPC.theta2 -> PFC.theta2" ] = 0.5 * Wppc2pfc()
 
@@ -402,6 +403,8 @@ def process(task, mot_choice, n=2, learn=True, trial=0, debugging=True, RT=0):
         if m == CUE["mot"][:n][i]:
             choice = int(CUE["cog"][:n][i])
 
+            break
+
     if learn:  # 0:#
         # Compute reward
         reward = int(reward)
@@ -425,11 +428,16 @@ def process(task, mot_choice, n=2, learn=True, trial=0, debugging=True, RT=0):
         W = connections["CTX.cog -> CTX.ass"].weights
         W[choice] += + dw * (Wmax - W[choice]) * (W[choice] - Wmin)
         connections["CTX.cog -> CTX.ass"].weights = W
-
+        #
         dw = alpha_LTP_ctx * CTX.mot.V[m]
         W = connections["CTX.mot -> CTX.ass"].weights
         W[m] += dw * (Wmax - W[m]) * (W[m] - Wmin)
         connections["CTX.mot -> CTX.ass"].weights = W
+
+        # dw = alpha_LTP_ctx * CTX.mot.V[mot_choice]
+        # W = connections["CTX.mot -> CTX.ass"].weights
+        # W[mot_choice] += dw * (Wmax - W[mot_choice]) * (W[mot_choice] - Wmin)
+        # connections["CTX.mot -> CTX.ass"].weights = W
 
 
 def PFC_learning1(arm_pos, ppc, pfc, target):

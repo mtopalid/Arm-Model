@@ -29,7 +29,7 @@ connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights = temp["Wppc_str1"][-1]
 connections["PPC.theta2 -> PFC.theta2"].weights = temp["Wppc_pfc2"][-1]
 connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wpfc_str2"][-1]
 connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wppc_str1"][-1]
-time = trial(task, wholeFig=True, debugging=True)
+time = trial(task, ncues=1, wholeFig=True, debugging=True)
 print " Moves needed to reach a position after learning: ", task.records["moves"][0]
 
 histor = history()
@@ -77,6 +77,6 @@ plt.title('PPC2')
 plt.figure()
 plt.plot(ctx)
 plt.title('CTX')
-plt.show()
+# plt.show()
 # Display cortical activity during the single trial
 if 0: display_ctx(histor, duration)  # , "single-trial.pdf")

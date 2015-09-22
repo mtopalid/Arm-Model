@@ -33,7 +33,8 @@ buttons[3, :] = [6, 1]  # [100,75]
 
 # --- Time ---
 ms = 0.001
-duration = int(128. / ms)
+duration = int(6. / ms)
+duration_learning_positions = int(128. / ms)
 dt = 1 * ms
 tau = 10 * ms
 
