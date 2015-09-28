@@ -57,21 +57,21 @@ class Task_1ch(Task):
         i = (trial["ass"].ravel().argsort())[-1]
         m, c = np.unravel_index(i, (4, 4))
 
-        r = trial["rwd"][c]
         move = self.records[self.index]["move"]
+        reward = np.random.uniform(0, 1) < trial["rwd"][c]
+        self.records[self.index]["shape"] = c
 
         if debug:
             print "Trial %d" % (self.index + 1)
             print "  Action                : %d " % action
         if m == move:
-            reward = np.random.uniform(0, 1) < trial["rwd"][c]
-            self.records[self.index]["shape"] = c
             best = True
-            if debug:
-                print "  Move			        : %d" % (m)
-                if best:
-                    print "  Choice			    : %d" % (c)
-                print "  Reward (p=%.2f)		: %d" % (trial["rwd"][c], reward)
+        else:
+            best = False
+        if debug:
+            print "  Move			        : %d" % (m)
+            print "  Choice			    : %d" % (c)
+            print "  Reward (p=%.2f)		: %d" % (trial["rwd"][c], reward)
 
         # Record action, best action (was it the best action), reward and RT
         self.records[self.index]["action"] = action
