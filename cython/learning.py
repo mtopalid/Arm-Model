@@ -13,8 +13,8 @@ from parameters import *
 import sys
 
 
-def learning(task, trial_n=0, learn=True, debugging=True):
-    trial(task, trial_n=trial_n, learn=learn, debugging=debugging)
+def learning(task, ncues = 2, trial_n=0, learn=True, debugging=True, debugging_arm=False, duration=duration):
+    trial(task, ncues=ncues, trial_n=trial_n, learn=learn, debugging=debugging, debugging_arm=debugging_arm, duration=duration)
 
     if debugging and learn:
         debug_learning(connections["CTX.cog -> CTX.ass"].weights, connections["CTX.mot -> CTX.ass"].weights,
@@ -23,14 +23,15 @@ def learning(task, trial_n=0, learn=True, debugging=True):
     return
 
 
-def learning_trials(task, trials=n_trials, learn=True, debugging=True, debug_simulation=False):
+def learning_trials(task, ncues = 2, trials=n_trials, learn=True, debugging=True, debug_simulation=False,
+                    debugging_arm=False, duration=duration):
     if debug_simulation:
         steps = trials / 10
         print '  Starting   ',
 
     for i in range(trials):
 
-        learning(task, trial_n=i, learn=learn, debugging=debugging)
+        learning(task, ncues = ncues, trial_n=i, learn=learn, debugging=debugging, debugging_arm=debugging_arm, duration=duration)
 
         if debug_simulation:
             if i % steps == 0:
