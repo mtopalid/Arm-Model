@@ -145,17 +145,16 @@ connections = {
     "PFC.theta1 -> STR_PFC_PPC.theta1": PFCtoSTR(PFC.theta1.V, STR_PFC_PPC.theta1.Isyn, weights(n_pfc * n_ppc)),
     # plastic (RL)
     "PFC.theta2 -> STR_PFC_PPC.theta2": PFCtoSTR(PFC.theta2.V, STR_PFC_PPC.theta2.Isyn, weights(n_pfc * n_ppc)),
+    # plastic (RL)
     "PPC.theta1 -> STR_PFC_PPC.theta1": PPCtoSTR(PPC.theta1.V, STR_PFC_PPC.theta1.Isyn, 0.5 * np.ones(n_pfc * n_ppc)),
     # plastic (RL)
     "PPC.theta2 -> STR_PFC_PPC.theta2": PPCtoSTR(PPC.theta2.V, STR_PFC_PPC.theta2.Isyn, 0.5 * np.ones(n_pfc * n_ppc)),
+    # plastic (RL)
 
     "STR_PFC_PPC.theta1 -> GPE.pfcth1": STRpfcToBG(STR_PFC_PPC.theta1.V, GPE.pfcth1.Isyn, np.ones(n_pfc * n_ppc)),
     "STR_PFC_PPC.theta2 -> GPE.pfcth2": STRpfcToBG(STR_PFC_PPC.theta2.V, GPE.pfcth2.Isyn, np.ones(n_pfc * n_ppc)),
     "STR_PFC_PPC.theta1 -> GPI.pfcth1": STRpfcToBG(STR_PFC_PPC.theta1.V, GPI.pfcth1.Isyn, np.ones(n_pfc * n_ppc)),
     "STR_PFC_PPC.theta2 -> GPI.pfcth2": STRpfcToBG(STR_PFC_PPC.theta2.V, GPI.pfcth2.Isyn, np.ones(n_pfc * n_ppc)),
-
-    # "STR_PFC_PPC.theta2 -> STR.pfcth2": STRpfcToBG(STR_PFC_PPC.theta2.V, STR.pfcth2.Isyn, np.ones(n_pfc C.theta1 -> STR.pfcth1": STRpfcToBG(STR_PFC_PPC.theta1.V, STR.pfcth1.Isyn, np.ones(n_pfc * n_ppc)),
-    # "STR_PFC_PP* n_ppc)),
 
     "STR.pfcth1 -> GPE.pfcth1": OneToOne(STR.pfcth1.V, GPE.pfcth1.Isyn, np.ones(n_pfc)),
     "STR.pfcth2 -> GPE.pfcth2": OneToOne(STR.pfcth2.V, GPE.pfcth2.Isyn, np.ones(n_pfc)),
@@ -176,8 +175,6 @@ connections = {
     "PFC.theta2 -> THL.pfcth2": OneToOne(PFC.theta2.V, THL.pfcth2.Isyn, np.ones(n_pfc)),
 
     # Lateral connectivity
-    # "ARM.theta1 -> ARM.theta1": AllToAll(ARM.theta1.V, ARM.theta1.Isyn, Wlateral(n_arm)),
-    # "ARM.theta2 -> ARM.theta2": AllToAll(ARM.theta2.V, ARM.theta2.Isyn, Wlateral(n_arm)),
 
     "PPC.theta1 -> PPC.theta1": AllToAll(PPC.theta1.V, PPC.theta1.Isyn, Wlateral(n_ppc)),
     "PPC.theta2 -> PPC.theta2": AllToAll(PPC.theta2.V, PPC.theta2.Isyn, Wlateral(n_ppc)),
@@ -274,13 +271,13 @@ def reset_weights():
     connections["CTX.mot -> CTX.ass"].weights = weights(4, 0.00005)
     connections["CTX.cog -> STR.cog"].weights = weights(4)
 
-    connections["PPC.theta1 -> PFC.theta1"] = 0.5 * Wppc2pfc()
-    connections["PPC.theta2 -> PFC.theta2" ] = 0.5 * Wppc2pfc()
+    connections["PPC.theta1 -> PFC.theta1"].weights = 0.5 * Wppc2pfc()
+    connections["PPC.theta2 -> PFC.theta2"].weights = 0.5 * Wppc2pfc()
 
-    connections["PFC.theta1 -> STR_PFC_PPC.theta1"] = weights(n_pfc * n_ppc)
-    connections["PFC.theta2 -> STR_PFC_PPC.theta2"] = weights(n_pfc * n_ppc)
-    connections["PPC.theta1 -> STR_PFC_PPC.theta1"] = 0.5 * np.ones(n_pfc * n_ppc)
-    connections["PPC.theta2 -> STR_PFC_PPC.theta2"] = 0.5 * np.ones(n_pfc * n_ppc)
+    connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights = weights(n_pfc * n_ppc)
+    connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights = weights(n_pfc * n_ppc)
+    connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights = 0.5 * np.ones(n_pfc * n_ppc)
+    connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = 0.5 * np.ones(n_pfc * n_ppc)
 
 
 def reset_activities():
@@ -391,12 +388,13 @@ def reset_history():
     ARM.theta2.history[:duration] = 0
 
 
-def process(task, mot_choice, n=2, learn=True, trial=0, debugging=True, RT=0):
+def process(task, n=2, learn=True, trial=0, debugging=True):
+# def process(task, mot_choice, n=2, learn=True, trial=0, debugging=True, RT=0):
     # A motor decision has been made
     # The actual cognitive choice may differ from the cognitive choice
     # Only the motor decision can designate the chosen cue
-    reward, best = task.process(task[trial], action=mot_choice, debug=debugging, RT=RT)
-
+    # reward, best = task.process(task[trial], action=mot_choice, debug=debugging, RT=RT)
+    reward = task.records["reward"][trial]
     # Find the chosen cue through its position
     m =task.records[trial]["move"]
     for i in range(n):
@@ -440,12 +438,13 @@ def process(task, mot_choice, n=2, learn=True, trial=0, debugging=True, RT=0):
         # connections["CTX.mot -> CTX.ass"].weights = W
 
 
-def PFC_learning1(arm_pos, ppc, pfc, target):
-    if (arm_pos == target).all():
-        reward = 1
-    else:
-        reward = 0
+# def PFC_learning1(arm_pos, ppc, pfc, target):
+    # if (arm_pos == target).all():
+    #     reward = 1
+    # else:
+    #     reward = 0
 
+def PFC_learning1(reward, ppc, pfc):
     # print "reward: ", reward
     # Compute prediction error
     error = reward - PFC_value_th1.reshape((n_pfc, n_ppc))[pfc, ppc]
@@ -482,11 +481,11 @@ def PFC_learning1(arm_pos, ppc, pfc, target):
     # print 'PPC->PFC: ', W.reshape((n_pfc, n_ppc))[pfc, ppc]
 
 
-def PFC_learning2(arm_pos, ppc, pfc, target):
-    if arm_pos == target:
-        reward = 1
-    else:
-        reward = 0
+def PFC_learning2(reward, ppc, pfc):
+    # if arm_pos == target:
+    #     reward = 1
+    # else:
+    #     reward = 0
 
     # print "reward: ", reward
     # Compute prediction error
@@ -567,9 +566,9 @@ def debug_arm(theta=1):
         sma = np.argmax(SMA.theta1.V)
         mot = buttons[np.argmax(CTX.mot.V), 0]
         print "Motor CTX: ", mot
-        print "PPC: (%d, %d)" % (ppc / n, ppc % n)
-        print "PFC: ", pfc
-        print "SMA: (%d, %d)" % (sma / n_pfc, sma % n_pfc)
+        # print "PPC: (%d, %d)" % (ppc / n, ppc % n)
+        # print "PFC: ", pfc
+        # print "SMA: (%d, %d)" % (sma / n_pfc, sma % n_pfc)
         print "Arm: ", arm
         print
     else:
@@ -579,9 +578,9 @@ def debug_arm(theta=1):
         sma = np.argmax(SMA.theta2.V)
         mot = buttons[np.argmax(CTX.mot.V), 1]
         print "Motor CTX: ", mot
-        print "PPC: (%d, %d)" % (ppc / n, ppc % n)
-        print "PFC: ", pfc
-        print "SMA: (%d, %d)" % (sma / n_pfc, sma % n_pfc)
+        # print "PPC: (%d, %d)" % (ppc / n, ppc % n)
+        # print "PFC: ", pfc
+        # print "SMA: (%d, %d)" % (sma / n_pfc, sma % n_pfc)
         print "Arm: ", arm
         print
 
