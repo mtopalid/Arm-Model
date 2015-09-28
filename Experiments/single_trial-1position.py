@@ -31,19 +31,20 @@ if __name__ == "__main__":
     task = Task_1ch(n=6)
 
     # Compute a single trial
-    time = trial(task, cues_pres=cues_pres, ncues=1, debugging=True, wholeFig=True)
+    time = trial(task, cues_pres=cues_pres, ncues=1, duration=duration_learning_positions, debugging=True, wholeFig=True)
     print "Moves        : ", task.records[0]["moves"]
+    print time
 
     # retrieve the activity history of the structures
     histor = history()
-    pfc1 = histor["PFC"]["theta1"]
-    pfc2 = histor["PFC"]["theta2"]
-    sma1 = histor["SMA"]["theta1"]
-    sma2 = histor["SMA"]["theta2"]
-    arm1 = histor["ARM"]["theta1"]
-    arm2 = histor["ARM"]["theta2"]
-    ppc1 = histor["PPC"]["theta1"]
-    ppc2 = histor["PPC"]["theta2"]
+    pfc1 = histor["PFC"]["theta1"][:time]
+    pfc2 = histor["PFC"]["theta2"][:time]
+    sma1 = histor["SMA"]["theta1"][:time]
+    sma2 = histor["SMA"]["theta2"][:time]
+    arm1 = histor["ARM"]["theta1"][:time]
+    arm2 = histor["ARM"]["theta2"][:time]
+    ppc1 = histor["PPC"]["theta1"][:time]
+    ppc2 = histor["PPC"]["theta2"][:time]
 
     plt.figure()
     plt.plot(arm1)

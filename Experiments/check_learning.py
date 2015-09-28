@@ -12,8 +12,6 @@ path = '../cython/'
 sys.path.append(path)
 
 
-task = Task_1ch(n=4)
-
 folder = '../Results/Learn_Positions'
 # for i in range(4):
 #     f = folder + '/moves' + "%03d" % (i + 1) + '.npy'
@@ -29,8 +27,11 @@ connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights = temp["Wppc_str1"][-1]
 connections["PPC.theta2 -> PFC.theta2"].weights = temp["Wppc_pfc2"][-1]
 connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wpfc_str2"][-1]
 connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wppc_str1"][-1]
-time = trial(task, ncues=1, wholeFig=True, debugging=True)
-print " Moves needed to reach a position after learning: ", task.records["moves"][0]
+
+task = Task_1ch(n=120)
+for i in range(101):
+    time = trial(task, trial_n=i, ncues=1, wholeFig=True, debugging=True)
+# print " Moves needed to reach a position after learning: ", task.records["moves"][0]
 
 histor = history()
 ctx = histor["CTX"]["mot"][:time]

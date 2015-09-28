@@ -22,6 +22,8 @@ n_reverse_trials_Piron = 2400
 # Protocol B, D
 n_learning_trials = 4800  # 960 #720 #240 #
 n_testing_trials = 240
+# Learning Positions
+n_learning_positions_trials = 1200
 
 simulations = 250
 
@@ -33,8 +35,8 @@ buttons[3, :] = [6, 1]  # [100,75]
 
 # --- Time ---
 ms = 0.001
-duration = int(6. / ms)
-duration_learning_positions = int(128. / ms)
+duration = int(9. / ms)
+duration_learning_positions = int(256. / ms)
 dt = 1 * ms
 tau = 10 * ms
 

@@ -40,7 +40,7 @@ if __name__ == "__main__":
         # n should be multiple of 6 because there are 6 valuable combinations of shapes and positions
 
         # Compute a single trial
-        time = trial(task, ncues=1, wholeFig=True, trial_n=i)
+        time = trial(task, ncues=1, wholeFig=True, trial_n=i, duration=duration_learning_positions)
 
     f = folder + '/Records.npy'
     np.save(f,task.records)
