@@ -11,7 +11,7 @@ from display import *
 from parameters import *
 
 
-def trial(task, cues_pres=True, ncues=2, learn=True, debugging=False, trial_n=0, wholeFig=False):
+def trial(task, cues_pres=True, ncues=2, duration=duration, learn=True, debugging=True, debugging_arm=True, trial_n=0, wholeFig=False):
     reset_activities()
     reset_history()
     ct = None
@@ -40,16 +40,16 @@ def trial(task, cues_pres=True, ncues=2, learn=True, debugging=False, trial_n=0,
 
         arm = [np.argmax(ARM.theta1.V), np.argmax(ARM.theta2.V)]
 
-        if ((arm[0] != pos[0] and ARM.theta1.delta > 0.5) or (np.argmax(PFC.theta1.V) == 8 and PFC.theta1.delta > 5.) or i == t1 + 3000):
+        if ((arm[0] != pos[0] and ARM.theta1.delta > 0.5) or (
+                np.argmax(PFC.theta1.V) == 8 and PFC.theta1.delta > 5.) or i == t1 + 3000):
             pos[0] = arm[0]
             if target is not None:
                 moves += 1
-                PFC_learning1(arm[0], np.argmax(PPC.theta1.V), np.argmax(PFC.theta1.V), target[0])
-                if 0:#debugging:
+                if debugging_arm:#0:
                     debug_arm(theta=1)
                 if (arm == target).all():
                     for j in range(n):
-                        if (np.array(arm) == buttons[j,:]).all():
+                        if (np.array(arm) == buttons[j, :]).all():
                             move = j
                             break
                     task.records["move"][trial_n] = move
@@ -63,27 +63,33 @@ def trial(task, cues_pres=True, ncues=2, learn=True, debugging=False, trial_n=0,
                     task.records["Wppc_pfc2"][trial_n] = connections["PPC.theta2 -> PFC.theta2"].weights
                     task.records["Wpfc_str2"][trial_n] = connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights
                     task.records["Wppc_str2"][trial_n] = connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights
-                    task.records["moves"][trial_n]     = moves
+                    task.records["moves"][trial_n] = moves
 
-                    time = i #- 500
-                    process(task, mot_choice, n=ncues, learn=learn, debugging=debugging, trial=trial_n, RT=time-500)
+                    time = i  # - 500
+                    task.process(task[trial_n], action=mot_choice, debug=debugging, RT=time - 500)
+                    PFC_learning1(task.records["reward"][trial_n], np.argmax(PPC.theta1.V), np.argmax(PFC.theta1.V))
+                    process(task, n=ncues, learn=learn, debugging=debugging, trial=trial_n)
+                    # process(task, mot_choice, n=ncues, learn=learn, debugging=debugging, trial=trial_n, RT=time - 500)
 
                     # debug_arm_learning()
                     return time
+
                 else:
+                    # PFC_learning1(arm[0], np.argmax(PPC.theta1.V), np.argmax(PFC.theta1.V), target[0])
+                    PFC_learning1(task.records["reward"][trial_n], np.argmax(PPC.theta1.V), np.argmax(PFC.theta1.V))
                     reset_arm1_activities()
                     t1 = i
 
-        if ((arm[1] != pos[1] and ARM.theta2.delta > 0.5) or (np.argmax(PFC.theta2.V) == 8 and PFC.theta2.delta > 5.) or i == t2 + 3000) :#and choice_made
+        if ((arm[1] != pos[1] and ARM.theta2.delta > 0.5) or (
+                np.argmax(PFC.theta2.V) == 8 and PFC.theta2.delta > 5.) or i == t2 + 3000):  # and choice_made
             pos[1] = arm[1]
             if target is not None:
                 moves += 1
-                PFC_learning2(arm[1], np.argmax(PPC.theta2.V), np.argmax(PFC.theta2.V), target[1])
-                if 0:#debugging:
+                if debugging_arm:#0:
                     debug_arm(theta=2)
                 if (arm == target).all():
                     for j in range(n):
-                        if (np.array(arm) == buttons[j,:]).all():
+                        if (np.array(arm) == buttons[j, :]).all():
                             move = j
                             break
                     task.records["move"][trial_n] = move
@@ -97,13 +103,17 @@ def trial(task, cues_pres=True, ncues=2, learn=True, debugging=False, trial_n=0,
                     task.records["Wppc_pfc2"][trial_n] = connections["PPC.theta2 -> PFC.theta2"].weights
                     task.records["Wpfc_str2"][trial_n] = connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights
                     task.records["Wppc_str2"][trial_n] = connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights
-                    task.records["moves"][trial_n]     = moves
+                    task.records["moves"][trial_n] = moves
 
-                    time = i# - 500
-                    process(task, mot_choice, learn=learn, debugging=debugging, trial=trial_n, RT=time-500)
+                    time = i  # - 500
+                    task.process(task[trial_n], action=mot_choice, debug=debugging, RT=time - 500)
+                    PFC_learning2(task.records["reward"][trial_n], np.argmax(PPC.theta2.V), np.argmax(PFC.theta2.V))
+                    process(task, n=ncues, learn=learn, debugging=debugging, trial=trial_n)
 
                     return time
                 else:
+
+                    PFC_learning2(task.records["reward"][trial_n], np.argmax(PPC.theta2.V), np.argmax(PFC.theta2.V))
                     reset_arm2_activities()
                     t2 = i
 
@@ -157,6 +167,6 @@ def trial(task, cues_pres=True, ncues=2, learn=True, debugging=False, trial_n=0,
     task.records["Wppc_pfc2"][trial_n] = connections["PPC.theta2 -> PFC.theta2"].weights
     task.records["Wpfc_str2"][trial_n] = connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights
     task.records["Wppc_str2"][trial_n] = connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights
-    task.records["moves"][trial_n]     = moves
+    task.records["moves"][trial_n] = moves
 
     return time
