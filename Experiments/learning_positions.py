@@ -23,24 +23,20 @@ if __name__ == "__main__":
     from trial import *
     from task_1ch import Task_1ch
     import os
+    from learning import *
 
     folder = '../Results/Learn_Positions'
     if not os.path.exists(folder):
         os.makedirs(folder)
-    # 1 if there is presentation of cues else 0
-    trials = 1200
 
     # Initialize the system
-    task = Task_1ch(n=trials)
-    for i in range(trials):
-        print 'Experiment: ', i+1
-        reset_activities()
-        reset_history()
-        # Define the shapes and the positions that we'll be used to each trial
-        # n should be multiple of 6 because there are 6 valuable combinations of shapes and positions
+    task = Task_1ch(n=n_learning_positions_trials)
+    f = folder + '/Task.npy'
+    #np.save(f,task.trials)
 
-        # Compute a single trial
-        time = trial(task, ncues=1, wholeFig=True, trial_n=i, duration=duration_learning_positions)
+    # Repeated trials with learning after each trial
+    learning_trials(task, trials=n_learning_positions_trials, ncues=1, duration=duration_learning_positions, debugging_arm_learning = True)
+    print "Moves:\n", task.records["moves"][:n_learning_positions_trials]
 
     f = folder + '/Records.npy'
-    np.save(f,task.records)
+    #np.save(f,task.records)

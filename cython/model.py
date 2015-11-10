@@ -393,7 +393,7 @@ def process(task, n=2, learn=True, trial=0, debugging=True):
     # A motor decision has been made
     # The actual cognitive choice may differ from the cognitive choice
     # Only the motor decision can designate the chosen cue
-    # reward, best = task.process(task[trial], action=mot_choice, debug=debugging, RT=RT)
+    # reward,   = task.process(task[trial], action=mot_choice, debug=debugging, RT=RT)
     reward = task.records["reward"][trial]
     # Find the chosen cue through its position
     m =task.records[trial]["move"]
@@ -451,7 +451,7 @@ def PFC_learning1(reward, ppc, pfc):
     # Update cues values
     PFC_value_th1.reshape((n_pfc, n_ppc))[pfc, ppc] += error * alpha_CUE
     # PFC
-    lrate = alpha_LTP * 10 if error > 0 else alpha_LTD * 10
+    lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
     dw = error * lrate * STR_PFC_PPC.theta1.V.reshape((n_pfc, n_ppc))[pfc, ppc]
     W = connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights
     W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * \
@@ -464,7 +464,7 @@ def PFC_learning1(reward, ppc, pfc):
     # Update cues values
     PPC_value_th1.reshape((n_pfc, n_ppc))[pfc, ppc] += error * alpha_CUE
     # PPC
-    lrate = alpha_LTP * 10 if error > 0 else alpha_LTD * 10
+    lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
     dw = error * lrate * STR_PFC_PPC.theta1.V.reshape((n_pfc, n_ppc))[pfc, ppc]
     W = connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights
     W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * (
@@ -493,7 +493,7 @@ def PFC_learning2(reward, ppc, pfc):
     # Update cues values
     PFC_value_th2.reshape((n_pfc, n_ppc))[pfc, ppc] += error * alpha_CUE
     # PFC
-    lrate = alpha_LTP * 10 if error > 0 else alpha_LTD * 10
+    lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
     dw = error * lrate * STR_PFC_PPC.theta2.V.reshape((n_pfc, n_ppc))[pfc, ppc]
     W = connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights
     W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * (
@@ -506,7 +506,7 @@ def PFC_learning2(reward, ppc, pfc):
     # Update cues values
     PPC_value_th2.reshape((n_pfc, n_ppc))[pfc, ppc] += error * alpha_CUE
     # PPC
-    lrate = alpha_LTP * 10 if error > 0 else alpha_LTD * 10
+    lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
     dw = error * lrate * STR_PFC_PPC.theta2.V.reshape((n_pfc, n_ppc))[pfc, ppc]
     W = connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights
     W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * (

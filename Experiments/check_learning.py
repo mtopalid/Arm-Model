@@ -26,7 +26,7 @@ connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights = temp["Wpfc_str1"][-1]
 connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights = temp["Wppc_str1"][-1]
 connections["PPC.theta2 -> PFC.theta2"].weights = temp["Wppc_pfc2"][-1]
 connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wpfc_str2"][-1]
-connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wppc_str1"][-1]
+connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wppc_str2"][-1]
 
 task = Task_1ch(n=120)
 for i in range(101):

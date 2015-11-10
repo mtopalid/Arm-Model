@@ -25,7 +25,7 @@ n_testing_trials = 240
 # Learning Positions
 n_learning_positions_trials = 1200
 
-simulations = 250
+simulations = 100
 
 buttons = np.ones((n, 2))
 buttons[0, :] = [4, 1]  # [90,75]

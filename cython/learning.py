@@ -13,10 +13,10 @@ from parameters import *
 import sys
 
 
-def learning(task, ncues = 2, trial_n=0, learn=True, debugging=True, debugging_arm=False, duration=duration):
+def learning(task, ncues = 2, trial_n=0, learn=True, debugging=True, debugging_arm=False, debugging_learning = False, duration=duration):
     trial(task, ncues=ncues, trial_n=trial_n, learn=learn, debugging=debugging, debugging_arm=debugging_arm, duration=duration)
 
-    if debugging and learn:
+    if debugging_learning:
         debug_learning(connections["CTX.cog -> CTX.ass"].weights, connections["CTX.mot -> CTX.ass"].weights,
                        connections["CTX.cog -> STR.cog"].weights, CUE["value"])
 
@@ -24,7 +24,7 @@ def learning(task, ncues = 2, trial_n=0, learn=True, debugging=True, debugging_a
 
 
 def learning_trials(task, ncues = 2, trials=n_trials, learn=True, debugging=True, debug_simulation=False,
-                    debugging_arm=False, duration=duration):
+                    debugging_arm=False, debugging_arm_learning = False, debugging_learning = False, duration=duration):
     if debug_simulation:
         steps = trials / 10
         print '  Starting   ',
@@ -37,9 +37,12 @@ def learning_trials(task, ncues = 2, trials=n_trials, learn=True, debugging=True
             if i % steps == 0:
                 print '\b.',
                 sys.stdout.flush()
+
     if debug_simulation:
         print '   Done!'
-    if debugging:
+    if debugging_arm_learning:
+        debug_arm_learning()
+    if debugging_learning:
         debug_learning(task.records["Wcog"][-1], task.records["Wmot"][-1], task.records["Wstr"][-1],
                        task.records["CueValues"][-1])
 
