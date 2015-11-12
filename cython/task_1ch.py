@@ -92,7 +92,5 @@ class Task_1ch(Task):
             print "  Mean Response time	move: %.3f ms" % np.array(rt).mean()
             rt = self.records[:self.index + 1]["RTmot"]
             print "  Mean Response time	mot: %.3f ms" % np.array(rt).mean()
-            rt = self.records[:self.index + 1]["RTcog"]
-            print "  Mean Response time	cog: %.3f ms" % np.array(rt).mean()
 
         return reward, best

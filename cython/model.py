@@ -103,37 +103,6 @@ def Wppc2pfc(n1=n_pfc, n2=n_arm, n3=n):
 
 # Connectivity 
 connections = {
-    # CTX <-> BG
-    "CTX.cog -> STR.cog": OneToOne(CTX.cog.V, STR.cog.Isyn, weights(4)),  # plastic (RL)
-    "CTX.mot -> STR.mot": OneToOne(CTX.mot.V, STR.mot.Isyn, 0.5 * np.ones(4)),
-    "CTX.ass -> STR.ass": OneToOne(CTX.ass.V, STR.ass.Isyn, 0.5 * np.ones(4 * 4)),
-    "CTX.cog -> STR.ass": CogToAss(CTX.cog.V, STR.ass.Isyn, 0.5 * np.ones(4)),
-    "CTX.mot -> STR.ass": MotToAss(CTX.mot.V, STR.ass.Isyn, 0.5 * np.ones(4)),
-
-    "CTX.cog -> STN.cog": OneToOne(CTX.cog.V, STN.cog.Isyn, np.ones(4)),
-    "CTX.mot -> STN.mot": OneToOne(CTX.mot.V, STN.mot.Isyn, np.ones(4)),
-
-    "STR.cog -> GPE.cog": OneToOne(STR.cog.V, GPE.cog.Isyn, np.ones(4)),
-    "STR.mot -> GPE.mot": OneToOne(STR.mot.V, GPE.mot.Isyn, np.ones(4)),
-    "STR.ass -> GPE.cog": AssToCog(STR.ass.V, GPE.cog.Isyn, np.ones(4)),
-    "STR.ass -> GPE.mot": AssToMot(STR.ass.V, GPE.mot.Isyn, np.ones(4)),
-    "GPE.cog -> STN.cog": OneToOne(GPE.cog.V, STN.cog.Isyn, np.ones(4)),
-    "GPE.mot -> STN.mot": OneToOne(GPE.mot.V, STN.mot.Isyn, np.ones(4)),
-    "STN.cog -> GPI.cog": OneToAll(STN.cog.V, GPI.cog.Isyn, np.ones(4)),
-    "STN.mot -> GPI.mot": OneToAll(STN.mot.V, GPI.mot.Isyn, np.ones(4)),
-
-    "STR.cog -> GPI.cog": OneToOne(STR.cog.V, GPI.cog.Isyn, np.ones(4)),
-    "STR.mot -> GPI.mot": OneToOne(STR.mot.V, GPI.mot.Isyn, np.ones(4)),
-    "STR.ass -> GPI.cog": AssToCog(STR.ass.V, GPI.cog.Isyn, np.ones(4)),
-    "STR.ass -> GPI.mot": AssToMot(STR.ass.V, GPI.mot.Isyn, np.ones(4)),
-
-    "GPI.cog -> THL.cog": OneToOne(GPI.cog.V, THL.cog.Isyn, np.ones(4)),
-    "GPI.mot -> THL.mot": OneToOne(GPI.mot.V, THL.mot.Isyn, np.ones(4)),
-
-    "THL.cog -> CTX.cog": OneToOne(THL.cog.V, CTX.cog.Isyn, np.ones(4)),
-    "THL.mot -> CTX.mot": OneToOne(THL.mot.V, CTX.mot.Isyn, np.ones(4)),
-    "CTX.cog -> THL.cog": OneToOne(CTX.cog.V, THL.cog.Isyn, np.ones(4)),
-    "CTX.mot -> THL.mot": OneToOne(CTX.mot.V, THL.mot.Isyn, np.ones(4)),
 
     # PFC <-> BG
     "PFC.theta1 -> STN.pfcth1": OneToOne(CTX.pfcth1.V, STN.pfcth1.Isyn, np.ones(n_pfc)),
@@ -186,8 +155,6 @@ connections = {
     "SMA.theta2 -> SMA.theta2": AllToAll(SMA.theta2.V, SMA.theta2.Isyn, Wlateral(n_sma)),
 
     "CTX.mot -> CTX.mot": AllToAll(CTX.mot.V, CTX.mot.Isyn, Wlateral(n)),
-    "CTX.cog -> CTX.cog": AllToAll(CTX.cog.V, CTX.cog.Isyn, Wlateral(n)),
-    "CTX.ass -> CTX.ass": AllToAll(CTX.ass.V, CTX.ass.Isyn, Wlateral(n * n)),
 
     # Input To PPC
 
@@ -212,18 +179,13 @@ connections = {
     "PFC.theta1 -> SMA.theta1": PFCtoSMA(PFC.theta1.V, SMA.theta1.Isyn, 0.5 * np.ones(n_pfc)),
     "PFC.theta2 -> SMA.theta2": PFCtoSMA(PFC.theta2.V, SMA.theta2.Isyn, 0.5 * np.ones(n_pfc)),
 
-    # Cortical Connectivity
-    "CTX.ass -> CTX.cog": AssToCog(CTX.ass.V, CTX.cog.Isyn, np.ones(4)),
-    "CTX.ass -> CTX.mot": AssToMot(CTX.ass.V, CTX.mot.Isyn, np.ones(4)),
-    "CTX.cog -> CTX.ass": CogToAss(CTX.cog.V, CTX.ass.Isyn, weights(4, 0.00005)),  # plastic (HL)
-    "CTX.mot -> CTX.ass": MotToAss(CTX.mot.V, CTX.ass.Isyn, weights(4, 0.00005)),  # plastic (HL)
 }
 for name, gain in gains.items():
     connections[name].gain = gain
 
 
-def set_trial(task, n=2, trial=0, protocol='Guthrie', familiar=True):
-    if n == 1:
+def set_trial(task, num=2, trial=0, protocol='Guthrie', familiar=True):
+    if num == 1:
         temp = (task[trial]["ass"].ravel().argsort())[-1:]
         CUE["mot"][0], CUE["cog"][0] = np.unravel_index(temp, (4, 4))
     else:
@@ -232,16 +194,11 @@ def set_trial(task, n=2, trial=0, protocol='Guthrie', familiar=True):
         CUE["mot"][1], CUE["cog"][1] = np.unravel_index(i2, (4, 4))
 
     CTX.mot.Iext = 0
-    CTX.cog.Iext = 0
-    CTX.ass.Iext = 0
 
-    for i in range(n):
+    for i in range(num):
         c, m = CUE["cog"][i], CUE["mot"][i]
 
-        CTX.mot.Iext[m] = Value_cue + np.random.uniform(-noise_cue / 2, noise_cue / 2)
-        CTX.cog.Iext[c] = Value_cue + np.random.uniform(-noise_cue / 2, noise_cue / 2)
-        CTX.ass.Iext[c * 4 + m] = Value_cue + np.random.uniform(-noise_cue / 2, noise_cue / 2)
-
+        CTX.mot.Iext[m] = 23 + np.random.uniform(-noise_cue / 2, noise_cue / 2)
 
 def iterate(dt):
     # Flush connections
@@ -267,9 +224,6 @@ def reset():
 
 
 def reset_weights():
-    connections["CTX.cog -> CTX.ass"].weights = weights(4, 0.00005)
-    connections["CTX.mot -> CTX.ass"].weights = weights(4, 0.00005)
-    connections["CTX.cog -> STR.cog"].weights = weights(4)
 
     connections["PPC.theta1 -> PFC.theta1"].weights = 0.5 * Wppc2pfc()
     connections["PPC.theta2 -> PFC.theta2"].weights = 0.5 * Wppc2pfc()
@@ -316,19 +270,6 @@ def reset_arm2_activities():
 def history():
     histor = np.zeros(duration, dtype=dtype)
     histor["CTX"]["mot"] = CTX.mot.history[:duration]
-    histor["CTX"]["cog"] = CTX.cog.history[:duration]
-    histor["CTX"]["ass"] = CTX.ass.history[:duration]
-    histor["STR"]["mot"] = STR.mot.history[:duration]
-    histor["STR"]["cog"] = STR.cog.history[:duration]
-    histor["STR"]["ass"] = STR.ass.history[:duration]
-    histor["STN"]["mot"] = STN.mot.history[:duration]
-    histor["STN"]["cog"] = STN.cog.history[:duration]
-    histor["GPE"]["mot"] = GPE.mot.history[:duration]
-    histor["GPE"]["cog"] = GPE.cog.history[:duration]
-    histor["GPI"]["mot"] = GPI.mot.history[:duration]
-    histor["GPI"]["cog"] = GPI.cog.history[:duration]
-    histor["THL"]["mot"] = THL.mot.history[:duration]
-    histor["THL"]["cog"] = THL.cog.history[:duration]
     histor["THL"]["pfcth1"] = THL.pfcth1.history[:duration]
     histor["THL"]["pfcth2"] = THL.pfcth2.history[:duration]
     histor["CTX"]["pfcth1"] = CTX.pfcth1.history[:duration]
@@ -353,19 +294,6 @@ def history():
 
 def reset_history():
     CTX.mot.history[:duration] = 0
-    CTX.cog.history[:duration] = 0
-    CTX.ass.history[:duration] = 0
-    STR.mot.history[:duration] = 0
-    STR.cog.history[:duration] = 0
-    STR.ass.history[:duration] = 0
-    STN.mot.history[:duration] = 0
-    STN.cog.history[:duration] = 0
-    GPE.mot.history[:duration] = 0
-    GPE.cog.history[:duration] = 0
-    GPI.mot.history[:duration] = 0
-    GPI.cog.history[:duration] = 0
-    THL.mot.history[:duration] = 0
-    THL.cog.history[:duration] = 0
 
     THL.pfcth1.history[:duration] = 0
     THL.pfcth2.history[:duration] = 0
@@ -388,61 +316,6 @@ def reset_history():
     ARM.theta2.history[:duration] = 0
 
 
-def process(task, n=2, learn=True, trial=0, debugging=True):
-# def process(task, mot_choice, n=2, learn=True, trial=0, debugging=True, RT=0):
-    # A motor decision has been made
-    # The actual cognitive choice may differ from the cognitive choice
-    # Only the motor decision can designate the chosen cue
-    # reward,   = task.process(task[trial], action=mot_choice, debug=debugging, RT=RT)
-    reward = task.records["reward"][trial]
-    # Find the chosen cue through its position
-    m =task.records[trial]["move"]
-    for i in range(n):
-        if m == CUE["mot"][:n][i]:
-            choice = int(CUE["cog"][:n][i])
-
-            break
-
-    if learn:  # 0:#
-        # Compute reward
-        reward = int(reward)
-
-        # Compute prediction error
-        error = reward - CUE["value"][choice]
-
-        # Update cues values
-        CUE["value"][choice] += error * alpha_CUE
-
-        # Reinforcement striatal learning
-        # Motor
-        lrate = alpha_LTP if error > 0 else alpha_LTD
-        dw = error * lrate * STR.cog.V[choice]
-        W = connections["CTX.cog -> STR.cog"].weights
-        W[choice] += + dw * (Wmax - W[choice]) * (W[choice] - Wmin)
-        connections["CTX.cog -> STR.cog"].weights = W
-
-        # Hebbian cortical learning
-        dw = alpha_LTP_ctx * CTX.cog.V[choice]
-        W = connections["CTX.cog -> CTX.ass"].weights
-        W[choice] += + dw * (Wmax - W[choice]) * (W[choice] - Wmin)
-        connections["CTX.cog -> CTX.ass"].weights = W
-        #
-        dw = alpha_LTP_ctx * CTX.mot.V[m]
-        W = connections["CTX.mot -> CTX.ass"].weights
-        W[m] += dw * (Wmax - W[m]) * (W[m] - Wmin)
-        connections["CTX.mot -> CTX.ass"].weights = W
-
-        # dw = alpha_LTP_ctx * CTX.mot.V[mot_choice]
-        # W = connections["CTX.mot -> CTX.ass"].weights
-        # W[mot_choice] += dw * (Wmax - W[mot_choice]) * (W[mot_choice] - Wmin)
-        # connections["CTX.mot -> CTX.ass"].weights = W
-
-
-# def PFC_learning1(arm_pos, ppc, pfc, target):
-    # if (arm_pos == target).all():
-    #     reward = 1
-    # else:
-    #     reward = 0
 
 def PFC_learning1(reward, ppc, pfc):
     # print "reward: ", reward
@@ -523,40 +396,6 @@ def PFC_learning2(reward, ppc, pfc):
     # print 'PPC->PFC: ', W.reshape((n_pfc, n_ppc))[pfc, ppc]
 
 
-def debug_learning(Wcog, Wmot, Wstr, cues_value):
-    print "  Cues Values			: ", cues_value
-    print "  Cortical Weights Cognitive	: ", Wcog
-    print "  Cortical Weights Motor	: ", Wmot
-    print "  Striatal Weights		: ", Wstr
-    print
-
-
-def debug_total(P, RT=None, CV=None, Wcog=None, Wmot=None, Wstr=None):
-    print "Mean Performance		: ", (P.mean(axis=1)).mean(axis=0) * 100, '%'
-    if RT is not None:
-        print "Mean Reaction Time	:", (RT.mean(axis=1)).mean(axis=0) * 100, '%'
-    if CV is not None:
-        print "Mean Cues Values		:" + str(CV.mean(axis=0))
-        print 'Mean Cortical Weights Cog	: ' + str(Wcog[:, -1].mean(axis=0))
-        print 'Mean Cortical Weights Mot	: ' + str(Wmot[:, -1].mean(axis=0))
-        print 'Mean Striatal Weights		: ' + str(Wstr[:, -1].mean(axis=0))
-
-
-# def debug1ch(cgchoice=None, c1=None, m1=None, P=None, RT=None):
-#     if cgchoice is not None:
-#         print "Choice:         ",
-#         if cgchoice == c1:
-#             print " 	[%d]" % c1,
-#         else:
-#             print " 	Wrong choice"
-#
-#     if m1 is not None:
-#         print "Positions:         	 %d" % (m1)
-#     if P is not None:
-#         print "Mean performance	 	: %.3f %%" % (np.array(P).mean() * 100)
-#
-#     if RT is not None:
-#         print "Mean Response time		: %.3f ms" % (np.array(RT).mean())
 
 def debug_arm(theta=1):
     if theta == 1:

@@ -23,7 +23,7 @@ n_reverse_trials_Piron = 2400
 n_learning_trials = 4800  # 960 #720 #240 #
 n_testing_trials = 240
 # Learning Positions
-n_learning_positions_trials = 1200
+n_learning_positions_trials = 480
 
 simulations = 100
 
@@ -36,15 +36,16 @@ buttons[3, :] = [6, 1]  # [100,75]
 # --- Time ---
 ms = 0.001
 duration = int(9. / ms)
-duration_learning_positions = int(256. / ms)
+duration_learning_positions = int(16. / ms)
 dt = 1 * ms
 tau = 10 * ms
 
 # --- Learning ---
-alpha_CUE = 0.0025  # 0.0005
-alpha_LTP = 0.005
-alpha_LTD = 0.00375
-alpha_LTP_ctx = alpha_LTP ** 2  # 0.000025
+a=1.5
+alpha_CUE = 0.0025*a  # 0.0005
+alpha_LTP = 0.005*a
+alpha_LTD = 0.00375*a
+alpha_LTP_ctx = alpha_LTP ** 2 *a # 0.000025
 
 # --- Sigmoid ---
 Vmin = 0
@@ -87,38 +88,6 @@ Wmin = 0.25
 Wmax = 0.75
 
 gains = {
-    # CTX <-> BG
-    "CTX.cog -> STR.cog": +1.0,
-    "CTX.mot -> STR.mot": +1.0,
-    "CTX.ass -> STR.ass": +1.0,
-    "CTX.cog -> STR.ass": +0.2,
-    "CTX.mot -> STR.ass": +0.2,
-
-    "CTX.cog -> STN.cog": +1.0,
-    "CTX.mot -> STN.mot": +1.0,
-
-    "STR.cog -> GPE.cog": -2.0,
-    "STR.mot -> GPE.mot": -2.0,
-    "STR.ass -> GPE.cog": -2.0,
-    "STR.ass -> GPE.mot": -2.0,
-    "GPE.cog -> STN.cog": -0.25,
-    "GPE.mot -> STN.mot": -0.25,
-    "STN.cog -> GPI.cog": +1.0,
-    "STN.mot -> GPI.mot": +1.0,
-
-    "STR.cog -> GPI.cog": -2.0,
-    "STR.mot -> GPI.mot": -2.0,
-    "STR.ass -> GPI.cog": -2.0,
-    "STR.ass -> GPI.mot": -2.0,
-
-    "GPI.cog -> THL.cog": -0.25,
-    "GPI.mot -> THL.mot": -0.25,
-
-    "THL.cog -> CTX.cog": +0.4,
-    "THL.mot -> CTX.mot": +0.4,
-    "CTX.cog -> THL.cog": +0.1,
-    "CTX.mot -> THL.mot": +0.1,
-
     # PFC <-> BG
     "PFC.theta1 -> STN.pfcth1": +1.0,
     "PFC.theta2 -> STN.pfcth2": +1.0,
@@ -173,8 +142,6 @@ gains = {
     "PFC.theta2 -> PFC.theta2": +0.5,
 
     "CTX.mot -> CTX.mot": +0.5,
-    "CTX.cog -> CTX.cog": +0.5,
-    "CTX.ass -> CTX.ass": +0.5,
 
     # Input To PPC
     "CTX.mot -> PPC.theta1": +0.3,
@@ -198,12 +165,6 @@ gains = {
     "PFC.theta1 -> SMA.theta1": +3.,
     "PFC.theta2 -> SMA.theta2": +3.,
 
-    # Cortical Connectivity
-    "CTX.cog -> CTX.ass": +0.01,
-    "CTX.mot -> CTX.ass": +0.01,
-
-    "CTX.ass -> CTX.cog": +0.01,
-    "CTX.ass -> CTX.mot": +0.01,
 
 }
 

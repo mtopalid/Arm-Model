@@ -31,7 +31,7 @@ if __name__ == "__main__":
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    for i in range(simulations):
+    for i in range(79,100):#simulations):
 
         print 'Simulation: ', i + 1
         # Initialize the system
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         task = Task_1ch(n=n_learning_positions_trials)
 
         # Repeated trials with learning after each trial
-        learning_trials(task, ncues=1, debug_simulation = True, debugging=False,
+        learning_trials(task, trials=n_learning_positions_trials, ncues=1, debug_simulation = True, debugging=False,
                         duration=duration_learning_positions, debugging_arm_learning=False)
 
         # Debugging information

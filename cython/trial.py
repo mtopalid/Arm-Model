@@ -34,7 +34,8 @@ def trial(task, cues_pres=True, ncues=2, duration=duration, learn=True, debuggin
             ARM.theta2.Iext[4] = 17
 
     if cues_pres:
-        set_trial(task, n=ncues, trial=trial_n)
+        set_trial(task, num=ncues, trial=trial_n)
+
     for i in xrange(500, duration):
         iterate(dt)
 
@@ -43,8 +44,8 @@ def trial(task, cues_pres=True, ncues=2, duration=duration, learn=True, debuggin
         if ((arm[0] != pos[0] and ARM.theta1.delta > 0.5) or (
                 np.argmax(PFC.theta1.V) == 8 and PFC.theta1.delta > 5.) or i == t1 + 3000):
             pos[0] = arm[0]
+            moves += 1
             if target is not None:
-                moves += 1
                 if debugging_arm:#0:
                     debug_arm(theta=1)
                 if (arm == target).all():
@@ -68,8 +69,6 @@ def trial(task, cues_pres=True, ncues=2, duration=duration, learn=True, debuggin
                     time = i  # - 500
                     task.process(task[trial_n], action=mot_choice, debug=debugging, RT=time - 500)
                     PFC_learning1(task.records["reward"][trial_n], np.argmax(PPC.theta1.V), np.argmax(PFC.theta1.V))
-                    process(task, n=ncues, learn=learn, debugging=debugging, trial=trial_n)
-                    # process(task, mot_choice, n=ncues, learn=learn, debugging=debugging, trial=trial_n, RT=time - 500)
 
                     # debug_arm_learning()
                     return time
@@ -83,8 +82,8 @@ def trial(task, cues_pres=True, ncues=2, duration=duration, learn=True, debuggin
         if ((arm[1] != pos[1] and ARM.theta2.delta > 0.5) or (
                 np.argmax(PFC.theta2.V) == 8 and PFC.theta2.delta > 5.) or i == t2 + 3000):  # and choice_made
             pos[1] = arm[1]
+            moves += 1
             if target is not None:
-                moves += 1
                 if debugging_arm:#0:
                     debug_arm(theta=2)
                 if (arm == target).all():
@@ -108,7 +107,6 @@ def trial(task, cues_pres=True, ncues=2, duration=duration, learn=True, debuggin
                     time = i  # - 500
                     task.process(task[trial_n], action=mot_choice, debug=debugging, RT=time - 500)
                     PFC_learning2(task.records["reward"][trial_n], np.argmax(PPC.theta2.V), np.argmax(PFC.theta2.V))
-                    process(task, n=ncues, learn=learn, debugging=debugging, trial=trial_n)
 
                     return time
                 else:
@@ -124,37 +122,18 @@ def trial(task, cues_pres=True, ncues=2, duration=duration, learn=True, debuggin
 
         if not choice_made:
             # Test if a decision has been made
-            if CTX.cog.delta > decision_threshold and not cog_time:
-                cog_time = i - 500
-                task.records["RTcog"][trial_n] = cog_time
             if CTX.mot.delta > decision_threshold and not mot_time:
                 mot_time = i - 500
                 task.records["RTmot"][trial_n] = mot_time
-
-            if mot_time and cog_time:
-                cog_choice = np.argmax(CTX.cog.U)
                 mot_choice = np.argmax(CTX.mot.U)
-                # process(task, mot_choice, learn=learn, debugging=debugging, trial=trial_n, RT=time)
                 target = buttons[mot_choice, :]
-                task.records["RTcog"][trial_n] = cog_time
-                task.records["shape"][trial_n] = cog_choice
-                task.records["CueValues"][trial_n] = CUE["value"]
-                task.records["Wstr"][trial_n] = connections["CTX.cog -> STR.cog"].weights
-                task.records["Wcog"][trial_n] = connections["CTX.cog -> CTX.ass"].weights
-                task.records["Wmot"][trial_n] = connections["CTX.mot -> CTX.ass"].weights
-                if 0:  # ch[-1] is None:
-                    mot_choice = np.argmax(CTX.mot.U)
-                    cog_choice = np.argmax(CTX.cog.U)
-                    print 'Wrong choice... \nMotor choice: %d\nCognitive choice: %d' % (mot_choice, cog_choice)
-                    print CUE["mot"][:n], CUE["cog"][:n]
-
                 choice_made = True
-                # print 'choice: ', mot_choice
+
     time = duration
 
     if debugging:
         print 'Trial Failed!'
-        print 'NoMove trial: ', trial_n
+        print 'NoMove trial: ', trial_n + 1
 
     task.records["move"][trial_n] = 4
     task.records["PFCValues1"][trial_n] = PFC_value_th1

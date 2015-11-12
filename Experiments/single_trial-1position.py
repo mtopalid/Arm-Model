@@ -33,10 +33,11 @@ if __name__ == "__main__":
     # Compute a single trial
     time = trial(task, cues_pres=cues_pres, ncues=1, duration=duration_learning_positions, debugging=True, wholeFig=True)
     print "Moves        : ", task.records[0]["moves"]
-    print time
+    print "Time         : ", time
 
     # retrieve the activity history of the structures
     histor = history()
+    mot = histor["CTX"]["mot"][:time]
     pfc1 = histor["PFC"]["theta1"][:time]
     pfc2 = histor["PFC"]["theta2"][:time]
     sma1 = histor["SMA"]["theta1"][:time]
@@ -45,6 +46,10 @@ if __name__ == "__main__":
     arm2 = histor["ARM"]["theta2"][:time]
     ppc1 = histor["PPC"]["theta1"][:time]
     ppc2 = histor["PPC"]["theta2"][:time]
+
+    plt.figure()
+    plt.plot(mot)
+    plt.title('Mot')
 
     plt.figure()
     plt.plot(arm1)
@@ -75,6 +80,6 @@ if __name__ == "__main__":
     plt.figure()
     plt.plot(ppc2)
     plt.title('PPC2')
-    plt.show()
+    # plt.show()
     # Display cortical activity during the single trial
     if 0: display_ctx(histor, 3.0)  # , "single-trial.pdf")
