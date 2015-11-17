@@ -44,7 +44,8 @@ class Task(object):
             return self.trials[index]
 
     def build(self, n, npfc=17, nppc=36):
-        self.trials = np.zeros(n, [("mot", float, 4),
+        self.trials = np.zeros(n, [("initial_pos", float, 2),
+                                   ("mot", float, 4),
                                    ("cog", float, 4),
                                    ("ass", float, (4, 4)),
                                    ("rwd", float, 4)])
@@ -71,7 +72,9 @@ class Task(object):
                                     ("Wpfc_str2", float, npfc * nppc),
                                     ("Wppc_str2", float, npfc * nppc),
                                     ("moves", int, 1),
-                                    ("reward", float, 1)])
+                                    ("reward", float, 1),
+                                    ("target_pos", float, 2),
+                                    ("final_pos", float, 2)])
 
     def process(self, trial, action, RT=0, debug=False):
 

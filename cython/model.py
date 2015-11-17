@@ -24,13 +24,13 @@ GPI = Structure(tau=tau, rest=GPI_rest, noise=GPi_N, activation=clamp)
 THL = Structure(tau=tau, rest=THL_rest, noise=Thalamus_N, activation=clamp)
 
 PPC = ArmStructure(tau=tau, rest=CTX_rest, noise=Cortex_N, activation=clamp, n=n_ppc)
-PFC = ArmStructure(tau=tau, rest=PFC_rest, noise=Cortex_N, activation=clamp, n=n_pfc)
-ARM = ArmStructure(tau=tau, rest=ARM_rest, noise=Cortex_N, activation=clamp, n=n_arm)
 SMA = ArmStructure(tau=tau, rest=SMA_rest, noise=Cortex_N, activation=clamp, n=n_sma)
-STR_PFC_PPC = ArmStructure(tau=tau, rest=STR_rest, noise=Striatum_N, activation=clamp, n=n_pfc * n_ppc)
+ARM = ArmStructure(tau=tau, rest=ARM_rest, noise=Cortex_N, activation=clamp, n=n_arm)
+M1 = ArmStructure(tau=tau, rest=M1_rest, noise=Cortex_N, activation=clamp, n=n_m1)
+STR_SMA_PPC = ArmStructure(tau=tau, rest=STR_rest, noise=Striatum_N, activation=clamp, n=n_sma * n_ppc)
 
-structures = (CTX, STR, STN, GPE, GPI, THL, PPC, PFC, ARM, SMA, STR_PFC_PPC)
-arm_structures = (PPC, PFC, SMA, STR_PFC_PPC, ARM)  #
+structures = (CTX, STR, STN, GPE, GPI, THL, PPC, SMA, ARM, M1, STR_SMA_PPC)
+arm_structures = (PPC, SMA, M1, STR_SMA_PPC, ARM)  #
 BG_structures = (STR, STN, GPE, GPI, THL)
 # Cue vector includes shapes, positions and the shapes' value used in reinforcement learning
 CUE = np.zeros(4, dtype=[("mot", float),
@@ -42,11 +42,11 @@ CUE["mot"] = 0, 1, 2, 3
 CUE["cog"] = 0, 1, 2, 3
 CUE["value"] = 0.5
 
-PFC_value_th1 = 0.5 * np.ones(n_pfc * n_ppc)
-PFC_value_th2 = 0.5 * np.ones(n_pfc * n_ppc)
+SMA_value_th1 = 0.5 * np.ones(n_sma * n_ppc)
+SMA_value_th2 = 0.5 * np.ones(n_sma * n_ppc)
 
-PPC_value_th1 = 0.5 * np.ones(n_ppc * n_pfc)
-PPC_value_th2 = 0.5 * np.ones(n_ppc * n_pfc)
+PPC_value_th1 = 0.5 * np.ones(n_ppc * n_sma)
+PPC_value_th2 = 0.5 * np.ones(n_ppc * n_sma)
 
 
 # Add noise to weights
@@ -60,7 +60,7 @@ def Wlateral(n):
     return (2 * np.eye(n) - np.ones((n, n))).ravel()
 
 
-def Wsma2sma(n1, n2):
+def Wm12m1(n1, n2):
     n = n1 * n2
     W = np.zeros((n, n))
     for i in range(n1):
@@ -72,7 +72,7 @@ def Wsma2sma(n1, n2):
     return W
 
 
-def Wsma2arm(n1=n_arm, n2=n_pfc):
+def Wm12arm(n1=n_arm, n2=n_sma):
     n_all = n1 * n2
     w = np.zeros((n1, n_all))
     for i in range(n1):
@@ -85,7 +85,7 @@ def Wsma2arm(n1=n_arm, n2=n_pfc):
     return w.reshape(n1 * n_all)
 
 
-def Wppc2pfc(n1=n_pfc, n2=n_arm, n3=n):
+def Wppc2sma(n1=n_sma, n2=n_arm, n3=n):
     w = np.zeros((n1, n2, n3))
     for i in range(n1):
         if i < n1 / 2 + 1:
@@ -97,62 +97,62 @@ def Wppc2pfc(n1=n_pfc, n2=n_arm, n3=n):
 
 
 # np.set_printoptions(threshold='nan')
-# print Wsma2arm(9,17).reshape((9,9,17))
-# print Wsma2sma(9,17).reshape((9*17,9,17))
-# print Wppc2pfc().reshape((17,9,4))
+# print Wm12arm(9,17).reshape((9,9,17))
+# print Wm12m1(9,17).reshape((9*17,9,17))
+# print Wppc2sma().reshape((17,9,4))
 
 # Connectivity 
 connections = {
 
-    # PFC <-> BG
-    "PFC.theta1 -> STN.pfcth1": OneToOne(CTX.pfcth1.V, STN.pfcth1.Isyn, np.ones(n_pfc)),
-    "PFC.theta2 -> STN.pfcth2": OneToOne(CTX.pfcth2.V, STN.pfcth2.Isyn, np.ones(n_pfc)),
+    # SMA <-> BG
+    "SMA.theta1 -> STN.smath1": OneToOne(CTX.smath1.V, STN.smath1.Isyn, np.ones(n_sma)),
+    "SMA.theta2 -> STN.smath2": OneToOne(CTX.smath2.V, STN.smath2.Isyn, np.ones(n_sma)),
 
-    "PFC.theta1 -> STR.pfcth1": OneToOne(PFC.theta1.V, STR.pfcth1.Isyn, 0.5 * np.ones(n_pfc)),  # plastic (RL)
-    "PFC.theta2 -> STR.pfcth2": OneToOne(PFC.theta2.V, STR.pfcth2.Isyn, weights(n_pfc)),
+    "SMA.theta1 -> STR.smath1": OneToOne(SMA.theta1.V, STR.smath1.Isyn, 0.5 * np.ones(n_sma)),  # plastic (RL)
+    "SMA.theta2 -> STR.smath2": OneToOne(SMA.theta2.V, STR.smath2.Isyn, weights(n_sma)),
 
-    "PFC.theta1 -> STR_PFC_PPC.theta1": PFCtoSTR(PFC.theta1.V, STR_PFC_PPC.theta1.Isyn, weights(n_pfc * n_ppc)),
+    "SMA.theta1 -> STR_SMA_PPC.theta1": SMAtoSTR(SMA.theta1.V, STR_SMA_PPC.theta1.Isyn, weights(n_sma * n_ppc)),
     # plastic (RL)
-    "PFC.theta2 -> STR_PFC_PPC.theta2": PFCtoSTR(PFC.theta2.V, STR_PFC_PPC.theta2.Isyn, weights(n_pfc * n_ppc)),
+    "SMA.theta2 -> STR_SMA_PPC.theta2": SMAtoSTR(SMA.theta2.V, STR_SMA_PPC.theta2.Isyn, weights(n_sma * n_ppc)),
     # plastic (RL)
-    "PPC.theta1 -> STR_PFC_PPC.theta1": PPCtoSTR(PPC.theta1.V, STR_PFC_PPC.theta1.Isyn, 0.5 * np.ones(n_pfc * n_ppc)),
+    "PPC.theta1 -> STR_SMA_PPC.theta1": PPCtoSTR(PPC.theta1.V, STR_SMA_PPC.theta1.Isyn, 0.5 * np.ones(n_sma * n_ppc)),
     # plastic (RL)
-    "PPC.theta2 -> STR_PFC_PPC.theta2": PPCtoSTR(PPC.theta2.V, STR_PFC_PPC.theta2.Isyn, 0.5 * np.ones(n_pfc * n_ppc)),
+    "PPC.theta2 -> STR_SMA_PPC.theta2": PPCtoSTR(PPC.theta2.V, STR_SMA_PPC.theta2.Isyn, 0.5 * np.ones(n_sma * n_ppc)),
     # plastic (RL)
 
-    "STR_PFC_PPC.theta1 -> GPE.pfcth1": STRpfcToBG(STR_PFC_PPC.theta1.V, GPE.pfcth1.Isyn, np.ones(n_pfc * n_ppc)),
-    "STR_PFC_PPC.theta2 -> GPE.pfcth2": STRpfcToBG(STR_PFC_PPC.theta2.V, GPE.pfcth2.Isyn, np.ones(n_pfc * n_ppc)),
-    "STR_PFC_PPC.theta1 -> GPI.pfcth1": STRpfcToBG(STR_PFC_PPC.theta1.V, GPI.pfcth1.Isyn, np.ones(n_pfc * n_ppc)),
-    "STR_PFC_PPC.theta2 -> GPI.pfcth2": STRpfcToBG(STR_PFC_PPC.theta2.V, GPI.pfcth2.Isyn, np.ones(n_pfc * n_ppc)),
+    "STR_SMA_PPC.theta1 -> GPE.smath1": STRsmaToBG(STR_SMA_PPC.theta1.V, GPE.smath1.Isyn, np.ones(n_sma * n_ppc)),
+    "STR_SMA_PPC.theta2 -> GPE.smath2": STRsmaToBG(STR_SMA_PPC.theta2.V, GPE.smath2.Isyn, np.ones(n_sma * n_ppc)),
+    "STR_SMA_PPC.theta1 -> GPI.smath1": STRsmaToBG(STR_SMA_PPC.theta1.V, GPI.smath1.Isyn, np.ones(n_sma * n_ppc)),
+    "STR_SMA_PPC.theta2 -> GPI.smath2": STRsmaToBG(STR_SMA_PPC.theta2.V, GPI.smath2.Isyn, np.ones(n_sma * n_ppc)),
 
-    "STR.pfcth1 -> GPE.pfcth1": OneToOne(STR.pfcth1.V, GPE.pfcth1.Isyn, np.ones(n_pfc)),
-    "STR.pfcth2 -> GPE.pfcth2": OneToOne(STR.pfcth2.V, GPE.pfcth2.Isyn, np.ones(n_pfc)),
-    "GPE.pfcth1 -> STN.pfcth1": OneToOne(GPE.pfcth1.V, STN.pfcth1.Isyn, np.ones(n_pfc)),
-    "GPE.pfcth2 -> STN.pfcth2": OneToOne(GPE.pfcth2.V, STN.pfcth2.Isyn, np.ones(n_pfc)),
-    "STN.pfcth1 -> GPI.pfcth1": OneToAll(STN.pfcth1.V, GPI.pfcth1.Isyn, np.ones(n_pfc)),
-    "STN.pfcth2 -> GPI.pfcth2": OneToAll(STN.pfcth2.V, GPI.pfcth2.Isyn, np.ones(n_pfc)),
+    "STR.smath1 -> GPE.smath1": OneToOne(STR.smath1.V, GPE.smath1.Isyn, np.ones(n_sma)),
+    "STR.smath2 -> GPE.smath2": OneToOne(STR.smath2.V, GPE.smath2.Isyn, np.ones(n_sma)),
+    "GPE.smath1 -> STN.smath1": OneToOne(GPE.smath1.V, STN.smath1.Isyn, np.ones(n_sma)),
+    "GPE.smath2 -> STN.smath2": OneToOne(GPE.smath2.V, STN.smath2.Isyn, np.ones(n_sma)),
+    "STN.smath1 -> GPI.smath1": OneToAll(STN.smath1.V, GPI.smath1.Isyn, np.ones(n_sma)),
+    "STN.smath2 -> GPI.smath2": OneToAll(STN.smath2.V, GPI.smath2.Isyn, np.ones(n_sma)),
 
-    "STR.pfcth1 -> GPI.pfcth1": OneToOne(STR.pfcth1.V, GPI.pfcth1.Isyn, np.ones(n_pfc)),
-    "STR.pfcth2 -> GPI.pfcth2": OneToOne(STR.pfcth2.V, GPI.pfcth2.Isyn, np.ones(n_pfc)),
+    "STR.smath1 -> GPI.smath1": OneToOne(STR.smath1.V, GPI.smath1.Isyn, np.ones(n_sma)),
+    "STR.smath2 -> GPI.smath2": OneToOne(STR.smath2.V, GPI.smath2.Isyn, np.ones(n_sma)),
 
-    "GPI.pfcth1 -> THL.pfcth1": OneToOne(GPI.pfcth1.V, THL.pfcth1.Isyn, np.ones(n_pfc)),
-    "GPI.pfcth2 -> THL.pfcth2": OneToOne(GPI.pfcth2.V, THL.pfcth2.Isyn, np.ones(n_pfc)),
+    "GPI.smath1 -> THL.smath1": OneToOne(GPI.smath1.V, THL.smath1.Isyn, np.ones(n_sma)),
+    "GPI.smath2 -> THL.smath2": OneToOne(GPI.smath2.V, THL.smath2.Isyn, np.ones(n_sma)),
 
-    "THL.pfcth1 -> PFC.theta1": OneToOne(THL.pfcth1.V, PFC.theta1.Isyn, np.ones(n_pfc)),
-    "THL.pfcth2 -> PFC.theta2": OneToOne(THL.pfcth2.V, PFC.theta2.Isyn, np.ones(n_pfc)),
-    "PFC.theta1 -> THL.pfcth1": OneToOne(PFC.theta1.V, THL.pfcth1.Isyn, np.ones(n_pfc)),
-    "PFC.theta2 -> THL.pfcth2": OneToOne(PFC.theta2.V, THL.pfcth2.Isyn, np.ones(n_pfc)),
+    "THL.smath1 -> SMA.theta1": OneToOne(THL.smath1.V, SMA.theta1.Isyn, np.ones(n_sma)),
+    "THL.smath2 -> SMA.theta2": OneToOne(THL.smath2.V, SMA.theta2.Isyn, np.ones(n_sma)),
+    "SMA.theta1 -> THL.smath1": OneToOne(SMA.theta1.V, THL.smath1.Isyn, np.ones(n_sma)),
+    "SMA.theta2 -> THL.smath2": OneToOne(SMA.theta2.V, THL.smath2.Isyn, np.ones(n_sma)),
 
     # Lateral connectivity
 
     "PPC.theta1 -> PPC.theta1": AllToAll(PPC.theta1.V, PPC.theta1.Isyn, Wlateral(n_ppc)),
     "PPC.theta2 -> PPC.theta2": AllToAll(PPC.theta2.V, PPC.theta2.Isyn, Wlateral(n_ppc)),
 
-    "PFC.theta1 -> PFC.theta1": AllToAll(PFC.theta1.V, PFC.theta1.Isyn, Wlateral(n_pfc)),
-    "PFC.theta2 -> PFC.theta2": AllToAll(PFC.theta2.V, PFC.theta2.Isyn, Wlateral(n_pfc)),
-
     "SMA.theta1 -> SMA.theta1": AllToAll(SMA.theta1.V, SMA.theta1.Isyn, Wlateral(n_sma)),
     "SMA.theta2 -> SMA.theta2": AllToAll(SMA.theta2.V, SMA.theta2.Isyn, Wlateral(n_sma)),
+
+    "M1.theta1 -> M1.theta1": AllToAll(M1.theta1.V, M1.theta1.Isyn, Wlateral(n_m1)),
+    "M1.theta2 -> M1.theta2": AllToAll(M1.theta2.V, M1.theta2.Isyn, Wlateral(n_m1)),
 
     "CTX.mot -> CTX.mot": AllToAll(CTX.mot.V, CTX.mot.Isyn, Wlateral(n)),
 
@@ -164,20 +164,20 @@ connections = {
     "ARM.theta1 -> PPC.theta1": ARMtoPPC(ARM.theta1.V, PPC.theta1.Isyn, 0.5 * np.ones(n_arm)),
     "ARM.theta2 -> PPC.theta2": ARMtoPPC(ARM.theta2.V, PPC.theta2.Isyn, 0.5 * np.ones(n_arm)),
 
-    # Input To PFC
-    "PPC.theta1 -> PFC.theta1": PPCtoPFC(PPC.theta1.V, PFC.theta1.Isyn, 0.5 * Wppc2pfc()),
-    "PPC.theta2 -> PFC.theta2": PPCtoPFC(PPC.theta2.V, PFC.theta2.Isyn, 0.5 * Wppc2pfc()),
+    # Input To SMA
+    "PPC.theta1 -> SMA.theta1": PPCtoSMA(PPC.theta1.V, SMA.theta1.Isyn, 0.5 * Wppc2sma()),
+    "PPC.theta2 -> SMA.theta2": PPCtoSMA(PPC.theta2.V, SMA.theta2.Isyn, 0.5 * Wppc2sma()),
 
     # Input To ARM
-    "SMA.theta1 -> ARM.theta1": SMAtoARM(SMA.theta1.V, ARM.theta1.Isyn, Wsma2arm(n_arm, n_pfc)),
-    "SMA.theta2 -> ARM.theta2": SMAtoARM(SMA.theta2.V, ARM.theta2.Isyn, Wsma2arm(n_arm, n_pfc)),
+    "M1.theta1 -> ARM.theta1": M1toARM(M1.theta1.V, ARM.theta1.Isyn, Wm12arm(n_arm, n_sma)),
+    "M1.theta2 -> ARM.theta2": M1toARM(M1.theta2.V, ARM.theta2.Isyn, Wm12arm(n_arm, n_sma)),
 
-    # Input To SMA
-    "ARM.theta1 -> SMA.theta1": ARMtoSMA(ARM.theta1.V, SMA.theta1.Isyn, 0.5 * np.ones(n_arm)),
-    "ARM.theta2 -> SMA.theta2": ARMtoSMA(ARM.theta2.V, SMA.theta2.Isyn, 0.5 * np.ones(n_arm)),
+    # Input To M1
+    "ARM.theta1 -> M1.theta1": ARMtoM1(ARM.theta1.V, M1.theta1.Isyn, 0.5 * np.ones(n_arm)),
+    "ARM.theta2 -> M1.theta2": ARMtoM1(ARM.theta2.V, M1.theta2.Isyn, 0.5 * np.ones(n_arm)),
 
-    "PFC.theta1 -> SMA.theta1": PFCtoSMA(PFC.theta1.V, SMA.theta1.Isyn, 0.5 * np.ones(n_pfc)),
-    "PFC.theta2 -> SMA.theta2": PFCtoSMA(PFC.theta2.V, SMA.theta2.Isyn, 0.5 * np.ones(n_pfc)),
+    "SMA.theta1 -> M1.theta1": SMAtoM1(SMA.theta1.V, M1.theta1.Isyn, 0.5 * np.ones(n_sma)),
+    "SMA.theta2 -> M1.theta2": SMAtoM1(SMA.theta2.V, M1.theta2.Isyn, 0.5 * np.ones(n_sma)),
 
 }
 for name, gain in gains.items():
@@ -199,6 +199,7 @@ def set_trial(task, num=2, trial=0, protocol='Guthrie', familiar=True):
         c, m = CUE["cog"][i], CUE["mot"][i]
 
         CTX.mot.Iext[m] = 23 + np.random.uniform(-noise_cue / 2, noise_cue / 2)
+    return m
 
 def iterate(dt):
     # Flush connections
@@ -225,13 +226,13 @@ def reset():
 
 def reset_weights():
 
-    connections["PPC.theta1 -> PFC.theta1"].weights = 0.5 * Wppc2pfc()
-    connections["PPC.theta2 -> PFC.theta2"].weights = 0.5 * Wppc2pfc()
+    connections["PPC.theta1 -> SMA.theta1"].weights = 0.5 * Wppc2sma()
+    connections["PPC.theta2 -> SMA.theta2"].weights = 0.5 * Wppc2sma()
 
-    connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights = weights(n_pfc * n_ppc)
-    connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights = weights(n_pfc * n_ppc)
-    connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights = 0.5 * np.ones(n_pfc * n_ppc)
-    connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = 0.5 * np.ones(n_pfc * n_ppc)
+    connections["SMA.theta1 -> STR_SMA_PPC.theta1"].weights = weights(n_sma * n_ppc)
+    connections["SMA.theta2 -> STR_SMA_PPC.theta2"].weights = weights(n_sma * n_ppc)
+    connections["PPC.theta1 -> STR_SMA_PPC.theta1"].weights = 0.5 * np.ones(n_sma * n_ppc)
+    connections["PPC.theta2 -> STR_SMA_PPC.theta2"].weights = 0.5 * np.ones(n_sma * n_ppc)
 
 
 def reset_activities():
@@ -247,10 +248,10 @@ def reset_arm1_activities():
         structure.theta1.Iext = 0
 
     for structure in BG_structures:
-        structure.pfcth1.U = 0
-        structure.pfcth1.V = 0
-        structure.pfcth1.Isyn = 0
-        structure.pfcth1.Iext = 0
+        structure.smath1.U = 0
+        structure.smath1.V = 0
+        structure.smath1.Isyn = 0
+        structure.smath1.Iext = 0
 
 
 def reset_arm2_activities():
@@ -261,31 +262,31 @@ def reset_arm2_activities():
         structure.theta2.Iext = 0
 
     for structure in BG_structures:
-        structure.pfcth2.U = 0
-        structure.pfcth2.V = 0
-        structure.pfcth2.Isyn = 0
-        structure.pfcth2.Iext = 0
+        structure.smath2.U = 0
+        structure.smath2.V = 0
+        structure.smath2.Isyn = 0
+        structure.smath2.Iext = 0
 
 
 def history():
     histor = np.zeros(duration, dtype=dtype)
     histor["CTX"]["mot"] = CTX.mot.history[:duration]
-    histor["THL"]["pfcth1"] = THL.pfcth1.history[:duration]
-    histor["THL"]["pfcth2"] = THL.pfcth2.history[:duration]
-    histor["CTX"]["pfcth1"] = CTX.pfcth1.history[:duration]
-    histor["CTX"]["pfcth2"] = CTX.pfcth2.history[:duration]
+    histor["THL"]["smath1"] = THL.smath1.history[:duration]
+    histor["THL"]["smath2"] = THL.smath2.history[:duration]
+    histor["CTX"]["smath1"] = CTX.smath1.history[:duration]
+    histor["CTX"]["smath2"] = CTX.smath2.history[:duration]
 
     histor["PPC"]["theta1"] = PPC.theta1.history[:duration]
     histor["PPC"]["theta2"] = PPC.theta2.history[:duration]
 
-    histor["PFC"]["theta1"] = PFC.theta1.history[:duration]
-    histor["PFC"]["theta2"] = PFC.theta2.history[:duration]
-
-    histor["STR_PFC_PPC"]["theta1"] = STR_PFC_PPC.theta1.history[:duration]
-    histor["STR_PFC_PPC"]["theta2"] = STR_PFC_PPC.theta2.history[:duration]
-
     histor["SMA"]["theta1"] = SMA.theta1.history[:duration]
     histor["SMA"]["theta2"] = SMA.theta2.history[:duration]
+
+    histor["STR_SMA_PPC"]["theta1"] = STR_SMA_PPC.theta1.history[:duration]
+    histor["STR_SMA_PPC"]["theta2"] = STR_SMA_PPC.theta2.history[:duration]
+
+    histor["M1"]["theta1"] = M1.theta1.history[:duration]
+    histor["M1"]["theta2"] = M1.theta2.history[:duration]
 
     histor["ARM"]["theta1"] = ARM.theta1.history[:duration]
     histor["ARM"]["theta2"] = ARM.theta2.history[:duration]
@@ -295,66 +296,66 @@ def history():
 def reset_history():
     CTX.mot.history[:duration] = 0
 
-    THL.pfcth1.history[:duration] = 0
-    THL.pfcth2.history[:duration] = 0
-    CTX.pfcth1.history[:duration] = 0
-    CTX.pfcth2.history[:duration] = 0
+    THL.smath1.history[:duration] = 0
+    THL.smath2.history[:duration] = 0
+    CTX.smath1.history[:duration] = 0
+    CTX.smath2.history[:duration] = 0
 
     PPC.theta1.history[:duration] = 0
     PPC.theta2.history[:duration] = 0
 
-    PFC.theta1.history[:duration] = 0
-    PFC.theta2.history[:duration] = 0
-
-    STR_PFC_PPC.theta1.history[:duration] = 0
-    STR_PFC_PPC.theta2.history[:duration] = 0
-
     SMA.theta1.history[:duration] = 0
     SMA.theta2.history[:duration] = 0
+
+    STR_SMA_PPC.theta1.history[:duration] = 0
+    STR_SMA_PPC.theta2.history[:duration] = 0
+
+    M1.theta1.history[:duration] = 0
+    M1.theta2.history[:duration] = 0
 
     ARM.theta1.history[:duration] = 0
     ARM.theta2.history[:duration] = 0
 
 
 
-def PFC_learning1(reward, ppc, pfc):
+def SMA_learning1(reward, ppc, sma):
     # print "reward: ", reward
     # Compute prediction error
-    error = reward - PFC_value_th1.reshape((n_pfc, n_ppc))[pfc, ppc]
+    error = reward - SMA_value_th1.reshape((n_sma, n_ppc))[sma, ppc]
     # Update cues values
-    PFC_value_th1.reshape((n_pfc, n_ppc))[pfc, ppc] += error * alpha_CUE
-    # PFC
+    SMA_value_th1.reshape((n_sma, n_ppc))[sma, ppc] += error * alpha_CUE
+    # SMA
     lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
-    dw = error * lrate * STR_PFC_PPC.theta1.V.reshape((n_pfc, n_ppc))[pfc, ppc]
-    W = connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights
-    W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * \
-                                           (W.reshape((n_pfc, n_ppc))[pfc, ppc] - Wmin)
-    connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights = W
-    # print 'PFC1: %d   PPC1: %d  \nPFC->STR: ' % (pfc, ppc), W.reshape((n_pfc, n_ppc))[pfc, ppc]
+    dw = error * lrate * STR_SMA_PPC.theta1.V.reshape((n_sma, n_ppc))[sma, ppc]
+    W = connections["SMA.theta1 -> STR_SMA_PPC.theta1"].weights
+    W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * \
+                                           (W.reshape((n_sma, n_ppc))[sma, ppc] - Wmin)
+    connections["SMA.theta1 -> STR_SMA_PPC.theta1"].weights = W
+    # print 'SMA1: %d   PPC1: %d  \nSMA->STR: ' % (sma, ppc), W.reshape((n_sma, n_ppc))[sma, ppc]
 
     # Compute prediction error
-    error = reward - PPC_value_th1.reshape((n_pfc, n_ppc))[pfc, ppc]
+    error = reward - PPC_value_th1.reshape((n_sma, n_ppc))[sma, ppc]
     # Update cues values
-    PPC_value_th1.reshape((n_pfc, n_ppc))[pfc, ppc] += error * alpha_CUE
+    PPC_value_th1.reshape((n_sma, n_ppc))[sma, ppc] += error * alpha_CUE
     # PPC
     lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
-    dw = error * lrate * STR_PFC_PPC.theta1.V.reshape((n_pfc, n_ppc))[pfc, ppc]
-    W = connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights
-    W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * (
-        W.reshape((n_pfc, n_ppc))[pfc, ppc] - Wmin)
-    connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights = W
-    # print 'PPC->STR: ', W.reshape((n_pfc, n_ppc))[pfc, ppc]
+    dw = error * lrate * STR_SMA_PPC.theta1.V.reshape((n_sma, n_ppc))[sma, ppc]
+    W = connections["PPC.theta1 -> STR_SMA_PPC.theta1"].weights
+    W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * (
+        W.reshape((n_sma, n_ppc))[sma, ppc] - Wmin)
+    connections["PPC.theta1 -> STR_SMA_PPC.theta1"].weights = W
+    # print 'PPC->STR: ', W.reshape((n_sma, n_ppc))[sma, ppc]
 
     # Hebbian cortical learning
     dw = alpha_LTP_ctx * PPC.theta1.V[ppc]
-    W = connections["PPC.theta1 -> PFC.theta1"].weights
-    W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * (
-        W.reshape((n_pfc, n_ppc))[pfc, ppc] - Wmin)
-    connections["PPC.theta1 -> PFC.theta1"].weights = W
-    # print 'PPC->PFC: ', W.reshape((n_pfc, n_ppc))[pfc, ppc]
+    W = connections["PPC.theta1 -> SMA.theta1"].weights
+    W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * (
+        W.reshape((n_sma, n_ppc))[sma, ppc] - Wmin)
+    connections["PPC.theta1 -> SMA.theta1"].weights = W
+    # print 'PPC->SMA: ', W.reshape((n_sma, n_ppc))[sma, ppc]
 
 
-def PFC_learning2(reward, ppc, pfc):
+def SMA_learning2(reward, ppc, sma):
     # if arm_pos == target:
     #     reward = 1
     # else:
@@ -362,77 +363,77 @@ def PFC_learning2(reward, ppc, pfc):
 
     # print "reward: ", reward
     # Compute prediction error
-    error = reward - PFC_value_th2.reshape((n_pfc, n_ppc))[pfc, ppc]
+    error = reward - SMA_value_th2.reshape((n_sma, n_ppc))[sma, ppc]
     # Update cues values
-    PFC_value_th2.reshape((n_pfc, n_ppc))[pfc, ppc] += error * alpha_CUE
-    # PFC
+    SMA_value_th2.reshape((n_sma, n_ppc))[sma, ppc] += error * alpha_CUE
+    # SMA
     lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
-    dw = error * lrate * STR_PFC_PPC.theta2.V.reshape((n_pfc, n_ppc))[pfc, ppc]
-    W = connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights
-    W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * (
-        W.reshape((n_pfc, n_ppc))[pfc, ppc] - Wmin)
-    connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights = W
-    # print 'PFC2: %d   PPC2: %d  \nPFC->STR: ' % (pfc, ppc), W.reshape((n_pfc, n_ppc))[pfc, ppc]
+    dw = error * lrate * STR_SMA_PPC.theta2.V.reshape((n_sma, n_ppc))[sma, ppc]
+    W = connections["SMA.theta2 -> STR_SMA_PPC.theta2"].weights
+    W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * (
+        W.reshape((n_sma, n_ppc))[sma, ppc] - Wmin)
+    connections["SMA.theta2 -> STR_SMA_PPC.theta2"].weights = W
+    # print 'SMA2: %d   PPC2: %d  \nSMA->STR: ' % (sma, ppc), W.reshape((n_sma, n_ppc))[sma, ppc]
 
     # Compute prediction error
-    error = reward - PPC_value_th2.reshape((n_pfc, n_ppc))[pfc, ppc]
+    error = reward - PPC_value_th2.reshape((n_sma, n_ppc))[sma, ppc]
     # Update cues values
-    PPC_value_th2.reshape((n_pfc, n_ppc))[pfc, ppc] += error * alpha_CUE
+    PPC_value_th2.reshape((n_sma, n_ppc))[sma, ppc] += error * alpha_CUE
     # PPC
     lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
-    dw = error * lrate * STR_PFC_PPC.theta2.V.reshape((n_pfc, n_ppc))[pfc, ppc]
-    W = connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights
-    W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * (
-        W.reshape((n_pfc, n_ppc))[pfc, ppc] - Wmin)
-    connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = W
-    # print 'PPC->STR: ', W.reshape((n_pfc, n_ppc))[pfc, ppc]
+    dw = error * lrate * STR_SMA_PPC.theta2.V.reshape((n_sma, n_ppc))[sma, ppc]
+    W = connections["PPC.theta2 -> STR_SMA_PPC.theta2"].weights
+    W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * (
+        W.reshape((n_sma, n_ppc))[sma, ppc] - Wmin)
+    connections["PPC.theta2 -> STR_SMA_PPC.theta2"].weights = W
+    # print 'PPC->STR: ', W.reshape((n_sma, n_ppc))[sma, ppc]
 
     # Hebbian cortical learning
     dw = alpha_LTP_ctx * PPC.theta2.V[ppc]
-    W = connections["PPC.theta2 -> PFC.theta2"].weights
-    W.reshape((n_pfc, n_ppc))[pfc, ppc] += dw * (Wmax - W.reshape((n_pfc, n_ppc))[pfc, ppc]) * (
-        W.reshape((n_pfc, n_ppc))[pfc, ppc] - Wmin)
-    connections["PPC.theta2 -> PFC.theta2"].weights = W
-    # print 'PPC->PFC: ', W.reshape((n_pfc, n_ppc))[pfc, ppc]
+    W = connections["PPC.theta2 -> SMA.theta2"].weights
+    W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * (
+        W.reshape((n_sma, n_ppc))[sma, ppc] - Wmin)
+    connections["PPC.theta2 -> SMA.theta2"].weights = W
+    # print 'PPC->SMA: ', W.reshape((n_sma, n_ppc))[sma, ppc]
 
 
 
 def debug_arm(theta=1):
     if theta == 1:
         ppc = np.argmax(PPC.theta1.V)
-        pfc = np.argmax(PFC.theta1.V)
-        arm = np.argmax(ARM.theta1.V)
         sma = np.argmax(SMA.theta1.V)
+        arm = np.argmax(ARM.theta1.V)
+        m1 = np.argmax(M1.theta1.V)
         mot = buttons[np.argmax(CTX.mot.V), 0]
         print "Motor CTX: ", mot
         # print "PPC: (%d, %d)" % (ppc / n, ppc % n)
-        # print "PFC: ", pfc
-        # print "SMA: (%d, %d)" % (sma / n_pfc, sma % n_pfc)
+        # print "SMA: ", sma
+        # print "M1: (%d, %d)" % (m1 / n_sma, m1 % n_sma)
         print "Arm: ", arm
         print
     else:
         ppc = np.argmax(PPC.theta2.V)
-        pfc = np.argmax(PFC.theta2.V)
-        arm = np.argmax(ARM.theta2.V)
         sma = np.argmax(SMA.theta2.V)
+        arm = np.argmax(ARM.theta2.V)
+        m1 = np.argmax(M1.theta2.V)
         mot = buttons[np.argmax(CTX.mot.V), 1]
         print "Motor CTX: ", mot
         # print "PPC: (%d, %d)" % (ppc / n, ppc % n)
-        # print "PFC: ", pfc
-        # print "SMA: (%d, %d)" % (sma / n_pfc, sma % n_pfc)
+        # print "SMA: ", sma
+        # print "M1: (%d, %d)" % (m1 / n_sma, m1 % n_sma)
         print "Arm: ", arm
         print
 
 
 def debug_arm_learning():
-    print "  PFC Values	1		: ", PFC_value_th1
+    print "  SMA Values	1		: ", SMA_value_th1
     print "  PPC Values	1		: ", PPC_value_th1
-    print "  PPC -> PFC Weights 1: ", connections["PPC.theta1 -> PFC.theta1"].weights.reshape((n_pfc, n_ppc))
-    print "  PFC -> STR Weights 1: ", connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights.reshape((n_pfc, n_ppc))
-    print "  PPC -> STR Weights 1: ", connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights.reshape((n_pfc, n_ppc))
-    print "  PFC Values	2		: ", PFC_value_th2
+    print "  PPC -> SMA Weights 1: ", connections["PPC.theta1 -> SMA.theta1"].weights.reshape((n_sma, n_ppc))
+    print "  SMA -> STR Weights 1: ", connections["SMA.theta1 -> STR_SMA_PPC.theta1"].weights.reshape((n_sma, n_ppc))
+    print "  PPC -> STR Weights 1: ", connections["PPC.theta1 -> STR_SMA_PPC.theta1"].weights.reshape((n_sma, n_ppc))
+    print "  SMA Values	2		: ", SMA_value_th2
     print "  PPC Values	2		: ", PPC_value_th2
-    print "  PPC -> PFC Weights 2: ", connections["PPC.theta2 -> PFC.theta2"].weights.reshape((n_pfc, n_ppc))
-    print "  PFC -> STR Weights 2: ", connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights.reshape((n_pfc, n_ppc))
-    print "  PPC -> STR Weights 2: ", connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights.reshape((n_pfc, n_ppc))
+    print "  PPC -> SMA Weights 2: ", connections["PPC.theta2 -> SMA.theta2"].weights.reshape((n_sma, n_ppc))
+    print "  SMA -> STR Weights 2: ", connections["SMA.theta2 -> STR_SMA_PPC.theta2"].weights.reshape((n_sma, n_ppc))
+    print "  PPC -> STR Weights 2: ", connections["PPC.theta2 -> STR_SMA_PPC.theta2"].weights.reshape((n_sma, n_ppc))
     print

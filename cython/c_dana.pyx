@@ -106,7 +106,7 @@ cdef class Group:
         self._delta = 0
         self._activation = activation
         self._history_index = 0
-        self._history = np.zeros((1000000, len(self._units)))
+        self._history = np.zeros((1000000000, len(self._units)))
 
     property history:
         """ Activity history (firing rate) """
@@ -214,17 +214,17 @@ cdef class Group:
 cdef class Structure:
     cdef Group _mot
     cdef Group _cog
-    cdef Group _pfcth1
-    cdef Group _pfcth2
+    cdef Group _smath1
+    cdef Group _smath2
 
-    def __init__(self, tau=0.01, rest=0, noise=0, activation=Identity(), n=4, n_pfc=17):
+    def __init__(self, tau=0.01, rest=0, noise=0, activation=Identity(), n=4, n_sma=17):
         self._mot = Group(np.zeros(n,dtype=dtype), tau=tau, rest=rest,
                            noise=noise, activation=activation)
         self._cog = Group(np.zeros(n,dtype=dtype), tau=tau, rest=rest,
                          noise=noise, activation=activation)
-        self._pfcth1 = Group(np.zeros(n_pfc,dtype=dtype), tau=tau, rest=rest,
+        self._smath1 = Group(np.zeros(n_sma,dtype=dtype), tau=tau, rest=rest,
                          noise=noise, activation=activation)
-        self._pfcth2 = Group(np.zeros(n_pfc,dtype=dtype), tau=tau, rest=rest,
+        self._smath2 = Group(np.zeros(n_sma,dtype=dtype), tau=tau, rest=rest,
                          noise=noise, activation=activation)
 
     property mot:
@@ -237,27 +237,27 @@ cdef class Structure:
         def __get__(self):
             return self._cog
 
-    property pfcth1:
+    property smath1:
         """ The cognitive group """
         def __get__(self):
-            return self._pfcth1
+            return self._smath1
 
-    property pfcth2:
+    property smath2:
         """ The cognitive group """
         def __get__(self):
-            return self._pfcth2
+            return self._smath2
 
     def evaluate(self, double dt):
         self._mot.evaluate(dt)
         self._cog.evaluate(dt)
-        self._pfcth1.evaluate(dt)
-        self._pfcth2.evaluate(dt)
+        self._smath1.evaluate(dt)
+        self._smath2.evaluate(dt)
 
     def reset(self):
         self._mot.reset()
         self._cog.reset()
-        self._pfcth1.reset()
-        self._pfcth2.reset()
+        self._smath1.reset()
+        self._smath2.reset()
 
 # ---------------------------------------------------- AssociativeStructure ---
 cdef class AssociativeStructure(Structure):
@@ -322,9 +322,9 @@ cdef class Connection:
     cdef double    _gain
     cdef int       _n
     cdef int       _narm
-    cdef int       _npfc
+    cdef int       _nsma
 
-    def __init__(self, source, target, weights, gain=1.0, n=4, narm=9, npfc=17):
+    def __init__(self, source, target, weights, gain=1.0, n=4, narm=9, nsma=17):
         self._active = True
         self._gain = gain
         self._source = source
@@ -332,7 +332,7 @@ cdef class Connection:
         self._weights = weights
         self._n         = n
         self._narm      = narm
-        self._npfc      = npfc
+        self._nsma      = nsma
 
     def flush(self):
         cdef int i
@@ -360,12 +360,12 @@ cdef class Connection:
         def __set__(self, value):
             self._narm = value
 
-    property npfc:
+    property nsma:
         """Gain of the connection"""
         def __get__(self):
-            return self._npfc
+            return self._nsma
         def __set__(self, value):
-            self._npfc = value
+            self._nsma = value
 
     property active:
         """ Whether connection is active """
@@ -515,21 +515,21 @@ cdef class ARMtoPPC(Connection):
             for j in range(self._n):
                 self._target[i*self._n+j] += v
 
-# --- PFCtoSMA ---
-cdef class PFCtoSMA(Connection):
+# --- SMAtoM1 ---
+cdef class SMAtoM1(Connection):
     def propagate(self):
         cdef int i,j
         cdef double v
         if not self._active: return
 
-        for i in range(self._npfc):
+        for i in range(self._nsma):
             v = self._source[i] * self._weights[i] * self._gain
             for j in range(self._narm):
-                self._target[j*self._npfc+i] += v
+                self._target[j*self._nsma+i] += v
 
 
-# --- ARMtoSMA ---
-cdef class ARMtoSMA(Connection):
+# --- ARMtoM1 ---
+cdef class ARMtoM1(Connection):
     def propagate(self):
         cdef int i,j
         cdef double v
@@ -537,11 +537,11 @@ cdef class ARMtoSMA(Connection):
 
         for i in range(self._narm ):
             v = self._source[i] * self._weights[i] * self._gain
-            for j in range(self._npfc):
-                self._target[i*self._npfc+j] += v
+            for j in range(self._nsma):
+                self._target[i*self._nsma+j] += v
 
-# --- SMAtoARM ---
-cdef class SMAtoARM(Connection):
+# --- M1toARM ---
+cdef class M1toARM(Connection):
     def propagate(self):
         cdef int i,j,k
         cdef double v
@@ -551,19 +551,19 @@ cdef class SMAtoARM(Connection):
             v = 0
 
             for i in range(self._narm):
-                for j in range(self._npfc):
-                   v += self._source[i*self._npfc+j] * self._weights[k*self._narm*self._npfc+i*self._npfc+j]
+                for j in range(self._nsma):
+                   v += self._source[i*self._nsma+j] * self._weights[k*self._narm*self._nsma+i*self._nsma+j]
 
             self._target[k] += v * self._gain
 
-# --- PPCtoPFC ---
-cdef class PPCtoPFC(Connection):
+# --- PPCtoSMA ---
+cdef class PPCtoSMA(Connection):
     def propagate(self):
         cdef int i,j,k
         cdef double v
         if not self._active: return
 
-        for k in range(self._npfc):
+        for k in range(self._nsma):
             v = 0
 
             for i in range(self._narm):
@@ -578,30 +578,30 @@ cdef class PPCtoSTR(Connection):
         cdef int i,k
         if not self._active: return
 
-        for k in range(self._npfc):
+        for k in range(self._nsma):
             for i in range(self._narm*self._n):
                 self._target[k*self._narm*self._n + i] += self._source[i] * self._weights[k*self._narm*self._n +i] * self._gain
 
 
-# --- PFCtoSTR ---
-cdef class PFCtoSTR(Connection):
+# --- SMAtoSTR ---
+cdef class SMAtoSTR(Connection):
     def propagate(self):
         cdef int i,k
         if not self._active: return
 
-        for k in range(self._npfc):
+        for k in range(self._nsma):
             for i in range(self._narm*self._n):
                    self._target[k*self._narm*self._n + i] += self._source[k] * self._weights[k*self._narm*self._n + i] * self._gain
 
 
-# --- STRpfcToBG ---
-cdef class STRpfcToBG(Connection):
+# --- STRsmaToBG ---
+cdef class STRsmaToBG(Connection):
     def propagate(self):
         cdef int i,j,k
         cdef double v
         if not self._active: return
 
-        for k in range(self._npfc):
+        for k in range(self._nsma):
             v = 0
 
             for i in range(self._narm*self._n):

@@ -10,19 +10,7 @@
 # Evolution of single trial with Guthrie protocol
 # -----------------------------------------------------------------------------
 
-if __name__ == "__main__":
-
-    # Include to the path files from cython folder
-    temp = '../cython/'
-    import sys
-
-    sys.path.append(temp)
-    # model file build the structures and initialize the model
-    from model import *
-    from display import *
-    from trial import *
-    from task_1ch import Task_1ch
-
+def single_trial():
     # 1 if there is presentation of cues else 0
     cues_pres = 1
     trials = 1
@@ -31,9 +19,10 @@ if __name__ == "__main__":
     task = Task_1ch(n=6)
 
     # Compute a single trial
-    time = trial(task, cues_pres=cues_pres, ncues=1, duration=duration_learning_positions, debugging=True, wholeFig=True)
-    print "Moves        : ", task.records[0]["moves"]
-    print "Time         : ", time
+    time = trial_(task, cues_pres=cues_pres, ncues=1, duration=duration_learning_positions, debugging=True,
+                 wholeFig=True)
+    # print "Moves        : ", task.records[0]["moves"]
+    # print "Time         : ", time
 
     # retrieve the activity history of the structures
     histor = history()
@@ -83,3 +72,17 @@ if __name__ == "__main__":
     # plt.show()
     # Display cortical activity during the single trial
     if 0: display_ctx(histor, 3.0)  # , "single-trial.pdf")
+
+if __name__ == "__main__":
+    # Include to the path files from cython folder
+    temp = '../cython/'
+    import sys
+
+    sys.path.append(temp)
+    # model file build the structures and initialize the model
+    from model import *
+    from display import *
+    from trial import *
+    from task_1ch import Task_1ch
+    single_trial()
+

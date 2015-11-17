@@ -2395,7 +2395,7 @@ static PyObject *__pyx_int_4;
 static PyObject *__pyx_int_9;
 static PyObject *__pyx_int_16;
 static PyObject *__pyx_int_17;
-static PyObject *__pyx_int_1000000;
+static PyObject *__pyx_int_1000000000;
 static PyObject *__pyx_int_neg_1;
 static PyObject *__pyx_k_;
 static PyObject *__pyx_k__2;
@@ -3789,7 +3789,7 @@ static int __pyx_pf_6c_dana_5Group___init__(struct __pyx_obj_6c_dana_Group *__py
  *         self._delta = 0
  *         self._activation = activation             # <<<<<<<<<<<<<<
  *         self._history_index = 0
- *         self._history = np.zeros((1000000, len(self._units)))
+ *         self._history = np.zeros((1000000000, len(self._units)))
  */
   if (!(likely(((__pyx_v_activation) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_activation, __pyx_ptype_6c_dana_Function))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 107; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_3 = __pyx_v_activation;
@@ -3804,7 +3804,7 @@ static int __pyx_pf_6c_dana_5Group___init__(struct __pyx_obj_6c_dana_Group *__py
  *         self._delta = 0
  *         self._activation = activation
  *         self._history_index = 0             # <<<<<<<<<<<<<<
- *         self._history = np.zeros((1000000, len(self._units)))
+ *         self._history = np.zeros((1000000000, len(self._units)))
  * 
  */
   __pyx_v_self->_history_index = 0;
@@ -3812,7 +3812,7 @@ static int __pyx_pf_6c_dana_5Group___init__(struct __pyx_obj_6c_dana_Group *__py
   /* "c_dana.pyx":109
  *         self._activation = activation
  *         self._history_index = 0
- *         self._history = np.zeros((1000000, len(self._units)))             # <<<<<<<<<<<<<<
+ *         self._history = np.zeros((1000000000, len(self._units)))             # <<<<<<<<<<<<<<
  * 
  *     property history:
  */
@@ -3830,9 +3830,9 @@ static int __pyx_pf_6c_dana_5Group___init__(struct __pyx_obj_6c_dana_Group *__py
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 109; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_7);
-  __Pyx_INCREF(__pyx_int_1000000);
-  PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_int_1000000);
-  __Pyx_GIVEREF(__pyx_int_1000000);
+  __Pyx_INCREF(__pyx_int_1000000000);
+  PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_int_1000000000);
+  __Pyx_GIVEREF(__pyx_int_1000000000);
   PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_4);
   __pyx_t_4 = 0;
@@ -28130,7 +28130,7 @@ static int __Pyx_InitGlobals(void) {
   __pyx_int_9 = PyInt_FromLong(9); if (unlikely(!__pyx_int_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_int_16 = PyInt_FromLong(16); if (unlikely(!__pyx_int_16)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_int_17 = PyInt_FromLong(17); if (unlikely(!__pyx_int_17)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_int_1000000 = PyInt_FromLong(1000000L); if (unlikely(!__pyx_int_1000000)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_int_1000000000 = PyInt_FromLong(1000000000L); if (unlikely(!__pyx_int_1000000000)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_int_neg_1 = PyInt_FromLong(-1); if (unlikely(!__pyx_int_neg_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
   __pyx_L1_error:;

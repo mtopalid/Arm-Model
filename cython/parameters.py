@@ -10,9 +10,9 @@ import numpy as np
 
 # Population size
 n = 4
-n_pfc = 17
+n_sma = 17
 n_arm = 9
-n_sma = n_pfc * n_arm
+n_m1 = n_sma * n_arm
 n_ppc = n_arm * n
 # Protocol A
 n_trials = 480
@@ -23,7 +23,7 @@ n_reverse_trials_Piron = 2400
 n_learning_trials = 4800  # 960 #720 #240 #
 n_testing_trials = 240
 # Learning Positions
-n_learning_positions_trials = 480
+n_learning_positions_trials = 81*81*20
 
 simulations = 100
 
@@ -41,7 +41,7 @@ dt = 1 * ms
 tau = 10 * ms
 
 # --- Learning ---
-a=1.5
+a=1.
 alpha_CUE = 0.0025*a  # 0.0005
 alpha_LTP = 0.005*a
 alpha_LTD = 0.00375*a
@@ -56,8 +56,8 @@ Vc = 3
 # --- Model ---
 decision_threshold = 40
 CTX_rest = -3.0
-SMA_rest = 3.0
-PFC_rest = 27.0
+M1_rest = 3.0
+SMA_rest = 27.0
 ARM_rest = -30.0
 STR_rest = 0.0
 STN_rest = -10.0
@@ -88,45 +88,45 @@ Wmin = 0.25
 Wmax = 0.75
 
 gains = {
-    # PFC <-> BG
-    "PFC.theta1 -> STN.pfcth1": +1.0,
-    "PFC.theta2 -> STN.pfcth2": +1.0,
+    # SMA <-> BG
+    "SMA.theta1 -> STN.smath1": +1.0,
+    "SMA.theta2 -> STN.smath2": +1.0,
 
-    "PFC.theta1 -> STR_PFC_PPC.theta1": +0.2,
-    "PFC.theta2 -> STR_PFC_PPC.theta2": +0.2,
-    "PPC.theta1 -> STR_PFC_PPC.theta1": +0.2,
-    "PPC.theta2 -> STR_PFC_PPC.theta2": +0.2,
+    "SMA.theta1 -> STR_SMA_PPC.theta1": +0.2,
+    "SMA.theta2 -> STR_SMA_PPC.theta2": +0.2,
+    "PPC.theta1 -> STR_SMA_PPC.theta1": +0.2,
+    "PPC.theta2 -> STR_SMA_PPC.theta2": +0.2,
 
-    "STR_PFC_PPC.theta1 -> GPE.pfcth1": -2.0,
-    "STR_PFC_PPC.theta2 -> GPE.pfcth2": -2.0,
-    "STR_PFC_PPC.theta1 -> GPI.pfcth1": -2.0,
-    "STR_PFC_PPC.theta2 -> GPI.pfcth2": -2.0,
+    "STR_SMA_PPC.theta1 -> GPE.smath1": -2.0,
+    "STR_SMA_PPC.theta2 -> GPE.smath2": -2.0,
+    "STR_SMA_PPC.theta1 -> GPI.smath1": -2.0,
+    "STR_SMA_PPC.theta2 -> GPI.smath2": -2.0,
 
-    # "STR_PFC_PPC.theta1 -> STR.pfcth1": +1.0,
-    # "STR_PFC_PPC.theta2 -> STR.pfcth2": +1.0,
+    # "STR_SMA_PPC.theta1 -> STR.smath1": +1.0,
+    # "STR_SMA_PPC.theta2 -> STR.smath2": +1.0,
 
-    "PFC.theta1 -> STR.pfcth1": +1.0,
-    "PFC.theta2 -> STR.pfcth2": +1.0,
+    "SMA.theta1 -> STR.smath1": +1.0,
+    "SMA.theta2 -> STR.smath2": +1.0,
 
-    "STR.pfcth1 -> GPE.pfcth1": -2.0,
-    "STR.pfcth2 -> GPE.pfcth2": -2.0,
+    "STR.smath1 -> GPE.smath1": -2.0,
+    "STR.smath2 -> GPE.smath2": -2.0,
 
-    "GPE.pfcth1 -> STN.pfcth1": -0.25,
-    "GPE.pfcth2 -> STN.pfcth2": -0.25,
+    "GPE.smath1 -> STN.smath1": -0.25,
+    "GPE.smath2 -> STN.smath2": -0.25,
 
-    "STN.pfcth1 -> GPI.pfcth1": +1.0,
-    "STN.pfcth2 -> GPI.pfcth2": +2.0,
+    "STN.smath1 -> GPI.smath1": +1.0,
+    "STN.smath2 -> GPI.smath2": +2.0,
 
-    "STR.pfcth1 -> GPI.pfcth1": -2.0,
-    "STR.pfcth2 -> GPI.pfcth2": -2.0,
+    "STR.smath1 -> GPI.smath1": -2.0,
+    "STR.smath2 -> GPI.smath2": -2.0,
 
-    "GPI.pfcth1 -> THL.pfcth1": -0.25,
-    "GPI.pfcth2 -> THL.pfcth2": -0.25,
+    "GPI.smath1 -> THL.smath1": -0.25,
+    "GPI.smath2 -> THL.smath2": -0.25,
 
-    "THL.pfcth1 -> PFC.theta1": +0.4,
-    "THL.pfcth2 -> PFC.theta2": +0.4,
-    "PFC.theta1 -> THL.pfcth1": +0.1,
-    "PFC.theta2 -> THL.pfcth2": +0.1,
+    "THL.smath1 -> SMA.theta1": +0.4,
+    "THL.smath2 -> SMA.theta2": +0.4,
+    "SMA.theta1 -> THL.smath1": +0.1,
+    "SMA.theta2 -> THL.smath2": +0.1,
 
     # Lateral connectivity
     # "ARM.theta1 -> ARM.theta1": +0.5,
@@ -135,11 +135,11 @@ gains = {
     "PPC.theta1 -> PPC.theta1": +0.5,
     "PPC.theta2 -> PPC.theta2": +0.5,
 
+    "M1.theta1 -> M1.theta1": +0.5,
+    "M1.theta2 -> M1.theta2": +0.5,
+
     "SMA.theta1 -> SMA.theta1": +0.5,
     "SMA.theta2 -> SMA.theta2": +0.5,
-
-    "PFC.theta1 -> PFC.theta1": +0.5,
-    "PFC.theta2 -> PFC.theta2": +0.5,
 
     "CTX.mot -> CTX.mot": +0.5,
 
@@ -150,33 +150,33 @@ gains = {
     "ARM.theta1 -> PPC.theta1": +0.3,
     "ARM.theta2 -> PPC.theta2": +0.3,
 
-    # Input To PFC
-    "PPC.theta1 -> PFC.theta1": +0.7,
-    "PPC.theta2 -> PFC.theta2": +0.7,
+    # Input To SMA
+    "PPC.theta1 -> SMA.theta1": +0.7,
+    "PPC.theta2 -> SMA.theta2": +0.7,
 
     # Input To ARM
-    "SMA.theta1 -> ARM.theta1": +1.,
-    "SMA.theta2 -> ARM.theta2": +1.,
+    "M1.theta1 -> ARM.theta1": +1.,
+    "M1.theta2 -> ARM.theta2": +1.,
 
-    # Input To SMA
-    "ARM.theta1 -> SMA.theta1": +0.3,
-    "ARM.theta2 -> SMA.theta2": +0.3,
+    # Input To M1
+    "ARM.theta1 -> M1.theta1": +0.3,
+    "ARM.theta2 -> M1.theta2": +0.3,
 
-    "PFC.theta1 -> SMA.theta1": +3.,
-    "PFC.theta2 -> SMA.theta2": +3.,
+    "SMA.theta1 -> M1.theta1": +3.,
+    "SMA.theta2 -> M1.theta2": +3.,
 
 
 }
 
-dtype = [("CTX", [("mot", float, n), ("cog", float, n), ("ass", float, 16), ("pfcth1", float, n_pfc),
-                  ("pfcth2", float, n_pfc)]),
+dtype = [("CTX", [("mot", float, n), ("cog", float, n), ("ass", float, 16), ("smath1", float, n_sma),
+                  ("smath2", float, n_sma)]),
          ("STR", [("mot", float, n), ("cog", float, n), ("ass", float, n * n)]),
          ("GPE", [("mot", float, n), ("cog", float, n)]),
          ("GPI", [("mot", float, n), ("cog", float, n)]),
-         ("THL", [("mot", float, n), ("cog", float, n), ("pfcth1", float, n_pfc), ("pfcth2", float, n_pfc)]),
+         ("THL", [("mot", float, n), ("cog", float, n), ("smath1", float, n_sma), ("smath2", float, n_sma)]),
          ("STN", [("mot", float, n), ("cog", float, n)]),
          ("PPC", [("theta1", float, n_ppc), ("theta2", float, n_ppc)]),
-         ("PFC", [("theta1", float, n_pfc), ("theta2", float, n_pfc)]),
-         ("STR_PFC_PPC", [("theta1", float, n_pfc * n_ppc), ("theta2", float, n_pfc * n_ppc)]),
          ("SMA", [("theta1", float, n_sma), ("theta2", float, n_sma)]),
+         ("STR_SMA_PPC", [("theta1", float, n_sma * n_ppc), ("theta2", float, n_sma * n_ppc)]),
+         ("M1", [("theta1", float, n_m1), ("theta2", float, n_m1)]),
          ("ARM", [("theta1", float, n_arm), ("theta2", float, n_arm)])]
