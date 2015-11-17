@@ -43,7 +43,7 @@ class Task(object):
             self.index = index
             return self.trials[index]
 
-    def build(self, n, npfc=17, nppc=36):
+    def build(self, n, nsma=17, nppc=36):
         self.trials = np.zeros(n, [("initial_pos", float, 2),
                                    ("mot", float, 4),
                                    ("cog", float, 4),
@@ -61,16 +61,16 @@ class Task(object):
                                     ("Wstr", float, 4),
                                     ("Wcog", float, 4),
                                     ("Wmot", float, 4),
-                                    ("PFCValues1", float, npfc * nppc),
-                                    ("PPCValues1", float, npfc * nppc),
-                                    ("PFCValues2", float, npfc * nppc),
-                                    ("PPCValues2", float, npfc * nppc),
-                                    ("Wppc_pfc1", float, npfc * nppc),
-                                    ("Wpfc_str1", float, npfc * nppc),
-                                    ("Wppc_str1", float, npfc * nppc),
-                                    ("Wppc_pfc2", float, npfc * nppc),
-                                    ("Wpfc_str2", float, npfc * nppc),
-                                    ("Wppc_str2", float, npfc * nppc),
+                                    ("SMAValues1", float, nsma * nppc),
+                                    ("PPCValues1", float, nsma * nppc),
+                                    ("SMAValues2", float, nsma * nppc),
+                                    ("PPCValues2", float, nsma * nppc),
+                                    ("Wppc_sma1", float, nsma * nppc),
+                                    ("Wsma_str1", float, nsma * nppc),
+                                    ("Wppc_str1", float, nsma * nppc),
+                                    ("Wppc_sma2", float, nsma * nppc),
+                                    ("Wsma_str2", float, nsma * nppc),
+                                    ("Wppc_str2", float, nsma * nppc),
                                     ("moves", int, 1),
                                     ("reward", float, 1),
                                     ("target_pos", float, 2),
@@ -150,31 +150,34 @@ if __name__ == "__main__":
     import random
 
     from task_a import Task_A
-    from task_b import Task_B
+    # from task_b import Task_B
     # from task_cg import Task_C
     # from task_cp import Task_C
+    from task_1ch import Task_1ch
 
     # task = Task_A(n=180)
-    task = Task_B(n=120)
+    # task = Task_B(n=120)
     # task = Task_C(n=30, r=6)
+    task = Task_1ch(n=81)
 
     for trial in task:
         # Only the associative group can provide (m1,c1), (m2,c2)
-        i1, i2 = (trial["ass"].ravel().argsort())[-2:]
-        m1, c1 = np.unravel_index(i1, (4, 4))
-        m2, c2 = np.unravel_index(i2, (4, 4))
+        # i1, i2 = (trial["ass"].ravel().argsort())[-2:]
+        # m1, c1 = np.unravel_index(i1, (4, 4))
+        # m2, c2 = np.unravel_index(i2, (4, 4))
 
         # Reward probabilities
-        r1, r2 = trial["rwd"][c1], trial["rwd"][c2]
+        # r1, r2 = trial["rwd"][c1], trial["rwd"][c2]
 
         # Random action
         # if random.uniform(0,1) < 0.5: action = m1
         # else:                         action = m2
 
         # Best action
-        if r1 > r2:
-            action = m1
-        else:
-            action = m2
-
-        reward, best = task.process(trial, action=action, debug=True)
+        # if r1 > r2:
+        #     action = m1
+        # else:
+        #     action = m2
+        #
+        # reward, best = task.process(trial, action=action, debug=True)
+        task.trials["initial_pos"]

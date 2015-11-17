@@ -67,7 +67,7 @@ class Task_1ch(Task):
             p = pos[i]
             trial = self.trials[i]
 
-            trial["initial_pos"] = p
+            trial["initial_pos"][:] = p[:]
             trial["cog"][c] += 1
             trial["mot"][m] += 1
             trial["ass"][m, c] += 1

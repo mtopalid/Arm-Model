@@ -19,7 +19,7 @@ def single_trial():
     task = Task_1ch(n=6)
 
     # Compute a single trial
-    time = trial_(task, cues_pres=cues_pres, ncues=1, duration=duration_learning_positions, debugging=True,
+    time = trial(task, cues_pres=cues_pres, ncues=1, duration=duration_learning_positions, debugging=True,
                  wholeFig=True)
     # print "Moves        : ", task.records[0]["moves"]
     # print "Time         : ", time
