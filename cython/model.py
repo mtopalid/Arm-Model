@@ -48,7 +48,6 @@ SMA_value_th2 = 0.5 * np.ones(n_sma * n_ppc)
 PPC_value_th1 = 0.5 * np.ones(n_ppc * n_sma)
 PPC_value_th2 = 0.5 * np.ones(n_ppc * n_sma)
 
-
 # Add noise to weights
 def weights(shape, s=0.005, initial=0.5):
     N = np.random.normal(initial, s, shape)
@@ -156,6 +155,10 @@ connections = {
 
     "CTX.mot -> CTX.mot": AllToAll(CTX.mot.V, CTX.mot.Isyn, Wlateral(n)),
 
+    # M1 between angles
+    "M1.theta1 -> M1.theta2": AllToAll(M1.theta1.V, M1.theta2.Isyn, 0.01 * np.ones(n_m1*n_m1)),
+    "M1.theta2 -> M1.theta1": AllToAll(M1.theta2.V, M1.theta1.Isyn, 0.01 * np.ones(n_m1*n_m1)),
+
     # Input To PPC
 
     "CTX.mot -> PPC.theta1": MotToPPC(CTX.mot.V, PPC.theta1.Isyn, 0.5 * np.ones(n)),
@@ -201,6 +204,7 @@ def set_trial(task, num=2, trial=0, protocol='Guthrie', familiar=True):
         CTX.mot.Iext[m] = 23 + np.random.uniform(-noise_cue / 2, noise_cue / 2)
     return m
 
+
 def iterate(dt):
     # Flush connections
     for connection in connections.values():
@@ -225,9 +229,11 @@ def reset():
 
 
 def reset_weights():
-
     connections["PPC.theta1 -> SMA.theta1"].weights = 0.5 * Wppc2sma()
     connections["PPC.theta2 -> SMA.theta2"].weights = 0.5 * Wppc2sma()
+
+    # connections["M1.theta1 -> M1.theta2"].weights = 0.01 * np.ones(n_m1*n_m1)
+    # connections["M1.theta2 -> M1.theta1"].weights = 0.01 * np.ones(n_m1*n_m1)
 
     connections["SMA.theta1 -> STR_SMA_PPC.theta1"].weights = weights(n_sma * n_ppc)
     connections["SMA.theta2 -> STR_SMA_PPC.theta2"].weights = weights(n_sma * n_ppc)
@@ -317,6 +323,22 @@ def reset_history():
     ARM.theta2.history[:duration] = 0
 
 
+def M1_learning1(m1_th1, m1_th2, Wmax = 0.75, Wmin = 0.00):
+
+    # Hebbian cortical learning
+    dw = alpha_LTP_ctx * M1.theta1.V[m1_th1]
+    W = connections["M1.theta1 -> M1.theta2"].weights
+    W.reshape((n_m1, n_m1))[m1_th1, m1_th2] += dw * (Wmax - W.reshape((n_m1, n_m1))[m1_th1, m1_th2]) * (
+        W.reshape((n_m1, n_m1))[m1_th1, m1_th2] - Wmin)
+    connections["M1.theta1 -> M1.theta2"].weights = W
+
+def M1_learning2(m1_th1, m1_th2, Wmax = 0.75, Wmin = 0.00):
+    dw = alpha_LTP_ctx * M1.theta2.V[m1_th2]
+    W = connections["M1.theta2 -> M1.theta1"].weights
+    W.reshape((n_m1, n_m1))[m1_th2, m1_th1] += dw * (Wmax - W.reshape((n_m1, n_m1))[m1_th2, m1_th1]) * (
+        W.reshape((n_m1, n_m1))[m1_th2, m1_th1] - Wmin)
+    connections["M1.theta1 -> M1.theta2"].weights = W
+
 
 def SMA_learning1(reward, ppc, sma):
     # print "reward: ", reward
@@ -325,7 +347,7 @@ def SMA_learning1(reward, ppc, sma):
     # Update cues values
     SMA_value_th1.reshape((n_sma, n_ppc))[sma, ppc] += error * alpha_CUE
     # SMA
-    lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
+    lrate = alpha_LTP if error > 0 else alpha_LTD * 10
     dw = error * lrate * STR_SMA_PPC.theta1.V.reshape((n_sma, n_ppc))[sma, ppc]
     W = connections["SMA.theta1 -> STR_SMA_PPC.theta1"].weights
     W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * \
@@ -338,7 +360,7 @@ def SMA_learning1(reward, ppc, sma):
     # Update cues values
     PPC_value_th1.reshape((n_sma, n_ppc))[sma, ppc] += error * alpha_CUE
     # PPC
-    lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
+    lrate = alpha_LTP if error > 0 else alpha_LTD * 10
     dw = error * lrate * STR_SMA_PPC.theta1.V.reshape((n_sma, n_ppc))[sma, ppc]
     W = connections["PPC.theta1 -> STR_SMA_PPC.theta1"].weights
     W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * (
@@ -367,7 +389,7 @@ def SMA_learning2(reward, ppc, sma):
     # Update cues values
     SMA_value_th2.reshape((n_sma, n_ppc))[sma, ppc] += error * alpha_CUE
     # SMA
-    lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
+    lrate = alpha_LTP if error > 0 else alpha_LTD * 10
     dw = error * lrate * STR_SMA_PPC.theta2.V.reshape((n_sma, n_ppc))[sma, ppc]
     W = connections["SMA.theta2 -> STR_SMA_PPC.theta2"].weights
     W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * (
@@ -380,7 +402,7 @@ def SMA_learning2(reward, ppc, sma):
     # Update cues values
     PPC_value_th2.reshape((n_sma, n_ppc))[sma, ppc] += error * alpha_CUE
     # PPC
-    lrate = alpha_LTP  if error > 0 else alpha_LTD * 10
+    lrate = alpha_LTP if error > 0 else alpha_LTD * 10
     dw = error * lrate * STR_SMA_PPC.theta2.V.reshape((n_sma, n_ppc))[sma, ppc]
     W = connections["PPC.theta2 -> STR_SMA_PPC.theta2"].weights
     W.reshape((n_sma, n_ppc))[sma, ppc] += dw * (Wmax - W.reshape((n_sma, n_ppc))[sma, ppc]) * (
@@ -397,31 +419,53 @@ def SMA_learning2(reward, ppc, sma):
     # print 'PPC->SMA: ', W.reshape((n_sma, n_ppc))[sma, ppc]
 
 
+# def debug_arm(theta=1):
+#     if theta == 1:
+#         ppc = np.argmax(PPC.theta1.V)
+#         sma = np.argmax(SMA.theta1.V)
+#         arm = np.argmax(ARM.theta1.V)
+#         m1 = np.argmax(M1.theta1.V)
+#         mot = buttons[np.argmax(CTX.mot.V), 0]
+#         print "Motor CTX: ", mot
+#         # print "PPC: (%d, %d)" % (ppc / n, ppc % n)
+#         # print "SMA: ", sma
+#         # print "M1: (%d, %d)" % (m1 / n_sma, m1 % n_sma)
+#         print "Arm: ", arm
+#         print
+#     else:
+#         ppc = np.argmax(PPC.theta2.V)
+#         sma = np.argmax(SMA.theta2.V)
+#         arm = np.argmax(ARM.theta2.V)
+#         m1 = np.argmax(M1.theta2.V)
+#         mot = buttons[np.argmax(CTX.mot.V), 1]
+#         print "Motor CTX: ", mot
+#         # print "PPC: (%d, %d)" % (ppc / n, ppc % n)
+#         # print "SMA: ", sma
+#         # print "M1: (%d, %d)" % (m1 / n_sma, m1 % n_sma)
+#         print "Arm: ", arm
+#         print
 
-def debug_arm(theta=1):
-    if theta == 1:
+def debug_arm():
         ppc = np.argmax(PPC.theta1.V)
         sma = np.argmax(SMA.theta1.V)
-        arm = np.argmax(ARM.theta1.V)
+        arm1 = np.argmax(ARM.theta1.V)
         m1 = np.argmax(M1.theta1.V)
-        mot = buttons[np.argmax(CTX.mot.V), 0]
-        print "Motor CTX: ", mot
+        mot1 = buttons[np.argmax(CTX.mot.V), 0]
+        # print "Motor CTX: ", mot
         # print "PPC: (%d, %d)" % (ppc / n, ppc % n)
         # print "SMA: ", sma
         # print "M1: (%d, %d)" % (m1 / n_sma, m1 % n_sma)
-        print "Arm: ", arm
-        print
-    else:
+        # print "Arm: ", arm
         ppc = np.argmax(PPC.theta2.V)
         sma = np.argmax(SMA.theta2.V)
-        arm = np.argmax(ARM.theta2.V)
+        arm2 = np.argmax(ARM.theta2.V)
         m1 = np.argmax(M1.theta2.V)
-        mot = buttons[np.argmax(CTX.mot.V), 1]
-        print "Motor CTX: ", mot
+        mot2 = buttons[np.argmax(CTX.mot.V), 1]
+        print "Motor CTX: ", mot1, mot2
         # print "PPC: (%d, %d)" % (ppc / n, ppc % n)
         # print "SMA: ", sma
         # print "M1: (%d, %d)" % (m1 / n_sma, m1 % n_sma)
-        print "Arm: ", arm
+        print "Arm: ", arm1,arm2
         print
 
 

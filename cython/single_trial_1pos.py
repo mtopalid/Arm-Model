@@ -27,12 +27,11 @@ def single_trial():
     trials = 1
     # Define the shapes and the positions that we'll be used to each trial
     # n should be multiple of 6 because there are 6 valuable combinations of shapes and positions
-    task = Task_1ch(n=81)
+    task = Task_1ch(n=81*4)
 
     # Compute a single trial
     time = trial(task, cues_pres=cues_pres, ncues=1, duration=duration_learning_positions,
-                                 debugging=True,
-                                 wholeFig=True) # trial_continuous_move #
+                                 debugging=True, wholeFig=True) # trial_continuous_move #
     print "Moves        : ", task.records[0]["moves"]
     print "Time         : ", time
 

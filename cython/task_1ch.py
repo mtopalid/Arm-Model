@@ -42,8 +42,8 @@ class Task_1ch(Task):
         pos = Z[M]
 
         # Make sure count is a multiple of 4
-        n = (n // 4) * 4
-        self.build(n)
+        # n = (n // 4) * 4
+        # self.build(n)
 
         # All combinations of cues or positions
         # Z = np.array([0, 1, 2, 3])

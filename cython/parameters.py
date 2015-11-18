@@ -33,6 +33,8 @@ buttons[1, :] = [1, 6]  # [75,100]
 buttons[2, :] = [4, 6]  # [90,100]
 buttons[3, :] = [6, 1]  # [100,75]
 
+angles = np.linspace(70, 110, num=9)
+
 # --- Time ---
 ms = 0.001
 duration = int(9. / ms)
@@ -41,11 +43,11 @@ dt = 1 * ms
 tau = 10 * ms
 
 # --- Learning ---
-a=1.
-alpha_CUE = 0.0025*a  # 0.0005
-alpha_LTP = 0.005*a
-alpha_LTD = 0.00375*a
-alpha_LTP_ctx = alpha_LTP ** 2 *a # 0.000025
+a = 1.
+alpha_CUE = 0.0025 * a  # 0.0005
+alpha_LTP = 0.005 * a
+alpha_LTD = 0.00375 * a
+alpha_LTP_ctx = alpha_LTP ** 2 * a  # 0.000025
 
 # --- Sigmoid ---
 Vmin = 0
@@ -143,6 +145,10 @@ gains = {
 
     "CTX.mot -> CTX.mot": +0.5,
 
+    # M1 between angles
+    "M1.theta1 -> M1.theta2": +0.05,
+    "M1.theta2 -> M1.theta1": +0.05,
+
     # Input To PPC
     "CTX.mot -> PPC.theta1": +0.3,
     "CTX.mot -> PPC.theta2": +0.3,
@@ -164,7 +170,6 @@ gains = {
 
     "SMA.theta1 -> M1.theta1": +3.,
     "SMA.theta2 -> M1.theta2": +3.,
-
 
 }
 
