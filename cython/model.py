@@ -9,6 +9,7 @@
 
 from c_dana import *
 from parameters import *
+from kinematics import *
 
 clamp = Clamp(min=0, max=1000)
 sigmoid = Sigmoid(Vmin=Vmin, Vmax=Vmax, Vh=Vh, Vc=Vc)
@@ -47,6 +48,58 @@ SMA_value_th2 = 0.5 * np.ones(n_sma * n_ppc)
 
 PPC_value_th1 = 0.5 * np.ones(n_ppc * n_sma)
 PPC_value_th2 = 0.5 * np.ones(n_ppc * n_sma)
+
+# Compute rewards for all possible choices
+def compute_rewards(target = np.array([1,6])):
+
+    rewards = np.zeros((9,9,9,9))
+    angles = np.linspace(70, 110, num=9)
+
+    for i in range(9):
+        for j in range(9):
+
+            initial_pos = np.array([i,j])
+
+            for k in range(9):
+                for l in range(9):
+
+                    pos = np.array([k, l])
+                    # Compute target angles
+                    temp = np.array([angles[target[0]], angles[target[1]]])
+                    # Compute target coordinations
+                    cor_tar = coordinations(conver_degr2rad(temp[0]), conver_degr2rad(temp[1]))
+
+                    # Compute initial position angles
+                    temp = np.array([angles[initial_pos[0]], angles[initial_pos][1]])
+                    # Compute initial position coordinations
+                    cor = coordinations(conver_degr2rad(temp[0]), conver_degr2rad(temp[1]))
+                    # Compute distance between initial position and target
+                    d_init = distance(cor_tar, cor)
+
+                    # Compute final position angles
+
+                    temp = np.array([angles[pos[0]], angles[pos[1]]])
+                    # Compute final position coordinations
+                    cor = coordinations(conver_degr2rad(temp[0]), conver_degr2rad(temp[1]))
+                    # Compute distance between initial position and target
+                    d_final = distance(cor_tar, cor)
+
+                    # Compute reward: 0.5 if it moved closer to the target
+                    #                 1.0 if reached the target
+                    #                 0.0 else
+
+                    if d_final == 0.0:
+                        rewards[i,j,k,l] = 1
+                    elif d_final < d_init:
+                        rewards[i,j,k,l] = 0.5
+                    elif d_final > d_init:
+                        rewards[i,j,k,l] = -0.5
+                    else:
+                        rewards[i,j,k,l] = 0
+
+    return rewards
+
+rewards = compute_rewards()
 
 # Add noise to weights
 def weights(shape, s=0.005, initial=0.5):
@@ -108,7 +161,7 @@ connections = {
     "SMA.theta2 -> STN.smath2": OneToOne(CTX.smath2.V, STN.smath2.Isyn, np.ones(n_sma)),
 
     "SMA.theta1 -> STR.smath1": OneToOne(SMA.theta1.V, STR.smath1.Isyn, 0.5 * np.ones(n_sma)),  # plastic (RL)
-    "SMA.theta2 -> STR.smath2": OneToOne(SMA.theta2.V, STR.smath2.Isyn, weights(n_sma)),
+    "SMA.theta2 -> STR.smath2": OneToOne(SMA.theta2.V, STR.smath2.Isyn, 0.5 * np.ones(n_sma)),
 
     "SMA.theta1 -> STR_SMA_PPC.theta1": SMAtoSTR(SMA.theta1.V, STR_SMA_PPC.theta1.Isyn, weights(n_sma * n_ppc)),
     # plastic (RL)
@@ -156,8 +209,8 @@ connections = {
     "CTX.mot -> CTX.mot": AllToAll(CTX.mot.V, CTX.mot.Isyn, Wlateral(n)),
 
     # M1 between angles
-    "M1.theta1 -> M1.theta2": AllToAll(M1.theta1.V, M1.theta2.Isyn, 0.01 * np.ones(n_m1*n_m1)),
-    "M1.theta2 -> M1.theta1": AllToAll(M1.theta2.V, M1.theta1.Isyn, 0.01 * np.ones(n_m1*n_m1)),
+    # "M1.theta1 -> M1.theta2": AllToAll(M1.theta1.V, M1.theta2.Isyn, 0.01 * np.ones(n_m1*n_m1)),
+    # "M1.theta2 -> M1.theta1": AllToAll(M1.theta2.V, M1.theta1.Isyn, 0.01 * np.ones(n_m1*n_m1)),
 
     # Input To PPC
 
