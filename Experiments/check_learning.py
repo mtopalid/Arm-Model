@@ -1,49 +1,46 @@
 #!/usr/bin/env python
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-from parameters import *
 import sys
-from model import *
+import os
+path = '../cython/'
+sys.path.append(path)
 from display import *
 from trial import *
 from task_1ch import Task_1ch
-path = '../cython/'
-sys.path.append(path)
 
-
-folder = '../Results/Learn_Positions'
 # for i in range(4):
 #     f = folder + '/moves' + "%03d" % (i + 1) + '.npy'
 #     temp = np.load(f)
 #     print temp
 
+folder = '../Results/Learn_Positions/Backup'#+M1_learning#
+
 f = folder + '/Records.npy'
 temp = np.load(f)
 # print "History of learning by moves: \n", temp["moves"]
-connections["PPC.theta1 -> PFC.theta1"].weights = temp["Wppc_pfc1"][-1]
-connections["PFC.theta1 -> STR_PFC_PPC.theta1"].weights = temp["Wpfc_str1"][-1]
-connections["PPC.theta1 -> STR_PFC_PPC.theta1"].weights = temp["Wppc_str1"][-1]
-connections["PPC.theta2 -> PFC.theta2"].weights = temp["Wppc_pfc2"][-1]
-connections["PFC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wpfc_str2"][-1]
-connections["PPC.theta2 -> STR_PFC_PPC.theta2"].weights = temp["Wppc_str2"][-1]
+connections["PPC.theta1 -> SMA.theta1"].weights = temp["Wppc_sma1"]
+connections["SMA.theta1 -> STR_SMA_PPC.theta1"].weights = temp["Wsma_str1"]
+connections["PPC.theta1 -> STR_SMA_PPC.theta1"].weights = temp["Wppc_str1"]
+connections["PPC.theta2 -> SMA.theta2"].weights = temp["Wppc_sma2"]
+connections["SMA.theta2 -> STR_SMA_PPC.theta2"].weights = temp["Wsma_str2"]
+connections["PPC.theta2 -> STR_SMA_PPC.theta2"].weights = temp["Wppc_str2"]
+# connections["M1.theta1 -> M1.theta2"].weights = temp["Wm1_1"]
+# connections["M1.theta2 -> M1.theta1"].weights = temp["Wm1_2"]
 
-task = Task_1ch(n=120)
+task = Task_1ch(n=81 * 4)
 for i in range(101):
-    time = trial(task, trial_n=i, ncues=1, wholeFig=True, debugging=True)
+    time = trial_continuous(task, trial_n=i, ncues=1, wholeFig=True, debugging=True, debugging_arm= False)
 # print " Moves needed to reach a position after learning: ", task.records["moves"][0]
 
 histor = history()
 ctx = histor["CTX"]["mot"][:time]
-pfc1 = histor["PFC"]["theta1"][:time]
-pfc2 = histor["PFC"]["theta2"][:time]
 sma1 = histor["SMA"]["theta1"][:time]
 sma2 = histor["SMA"]["theta2"][:time]
+m11 = histor["M1"]["theta1"][:time]
+m12 = histor["M1"]["theta2"][:time]
 arm1 = histor["ARM"]["theta1"][:time]
 arm2 = histor["ARM"]["theta2"][:time]
 ppc1 = histor["PPC"]["theta1"][:time]
 ppc2 = histor["PPC"]["theta2"][:time]
-
 
 plt.figure()
 plt.plot(arm1)
@@ -54,18 +51,18 @@ plt.plot(arm2)
 plt.title('Arm2')
 
 plt.figure()
+plt.plot(m11)
+plt.title('M11')
+plt.figure()
+plt.plot(m12)
+plt.title('M12')
+
+plt.figure()
 plt.plot(sma1)
 plt.title('SMA1')
 plt.figure()
 plt.plot(sma2)
 plt.title('SMA2')
-
-plt.figure()
-plt.plot(pfc1)
-plt.title('PFC1')
-plt.figure()
-plt.plot(pfc2)
-plt.title('PFC2')
 
 plt.figure()
 plt.plot(ppc1)
