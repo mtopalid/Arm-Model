@@ -23,7 +23,7 @@ n_reverse_trials_Piron = 2400
 n_learning_trials = 4800  # 960 #720 #240 #
 n_testing_trials = 240
 # Learning Positions
-n_learning_positions_trials = 81*81*20
+n_learning_positions_trials = 81*40#81*81*20
 
 simulations = 100
 
@@ -38,7 +38,7 @@ angles = np.linspace(70, 110, num=9)
 # --- Time ---
 ms = 0.001
 duration = int(9. / ms)
-duration_learning_positions = int(16. / ms)
+duration_learning_positions = int(64. / ms)
 dt = 1 * ms
 tau = 10 * ms
 
@@ -146,8 +146,8 @@ gains = {
     "CTX.mot -> CTX.mot": +0.5,
 
     # M1 between angles
-    "M1.theta1 -> M1.theta2": +0.05,
-    "M1.theta2 -> M1.theta1": +0.05,
+    # "M1.theta1 -> M1.theta2": +0.5,
+    # "M1.theta2 -> M1.theta1": +0.5,
 
     # Input To PPC
     "CTX.mot -> PPC.theta1": +0.3,
